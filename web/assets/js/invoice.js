@@ -33,6 +33,37 @@ var OnlineInvoice = function(jQuery, config) {
         return parts.join(".");
     }
 
+    function handleNewLine(evt) {
+        evt.preventDefault();
+
+        $('#description').parent('td').removeClass('has-error');
+
+        var quantity = $('#quantity').val();
+        var description = $('#description').val();
+        var line_price = $('#line_price').val();
+
+        if (description !== '') {
+            line = new InvoiceLine(quantity, description, line_price);
+            this.addLine(line);
+        } else {
+            $('#description').parent('td').addClass('has-error');
+        }
+
+        return false;
+    }
+
+    function handleFormChange(evt) {
+        var quantity = parseFloat($('#quantity').val());
+        var line_price = parseFloat($('#line_price').val());
+        var amount = quantity * line_price;
+
+        // Format and set the amounts
+        $('#amount').val(formatMoney(amount));
+        $('#line_price').val(formatMoney(line_price));
+
+        this.calculateTotal();
+    }
+
     return {
         Invoice: {
             lines: [],
@@ -40,8 +71,6 @@ var OnlineInvoice = function(jQuery, config) {
         },
 
         init: function() {
-            var self = this;
-
             console.log('starting up...');
             jQuery.each(this.getLines(), function(key, line) {
                 this.showLine(line);
@@ -54,34 +83,13 @@ var OnlineInvoice = function(jQuery, config) {
             form = format('invoiceLineForm', line);
             jQuery('#online-invoice tbody').append(form);
 
-            self.calculateTotal();
+            this.calculateTotal();
 
             // Detect value changes
-            jQuery('#online-invoice').on('change', 'input', function(evt) {
-                var quantity = parseFloat($('#quantity').val());
-                var line_price = parseFloat($('#line_price').val());
-                var amount = quantity * line_price;
-
-                // Format and set the amounts
-                $('#amount').val(formatMoney(amount));
-                $('#line_price').val(formatMoney(line_price));
-
-                self.calculateTotal();
-            });
+            jQuery('#online-invoice').on('change', 'input', jQuery.proxy(handleFormChange, this));
 
             // Add the new line
-            jQuery('#online-invoice').on('click', '#confirm-line', function(evt) {
-                evt.preventDefault();
-
-                var quantity = $('#quantity').val();
-                var description = $('#description').val();
-                var line_price = $('#line_price').val();
-
-                line = new InvoiceLine(quantity, description, line_price);
-                self.addLine(line);
-
-                return false;
-            });
+            jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleNewLine, this));
         },
 
         getLines: function() {
@@ -90,16 +98,23 @@ var OnlineInvoice = function(jQuery, config) {
 
         addLine: function(line) {
             lineCount++;
+            jQuery('#line-number').html(lineCount + '.');
             this.Invoice.lines.push(line);
             this.showLine(line);
             this.calculateTotal();
+
+            // reset
+            $('#description').val('');
+            $('#line_price').val('0.00');
+            $('#quantity').val('1');
+            jQuery.proxy(handleFormChange, this)();
         },
 
         showLine: function(line) {
             line.line_price = formatMoney(line.line_price);
             line.amount = formatMoney(line.amount);
             line = format('invoiceLine', line);
-            jQuery('#online-invoice tbody').append(line);
+            jQuery('#line-form').before(line);
         },
 
         calculateTotal: function() {
@@ -114,5 +129,3 @@ var OnlineInvoice = function(jQuery, config) {
         }
     };
 }(jQuery);
-
-OnlineInvoice.init();
