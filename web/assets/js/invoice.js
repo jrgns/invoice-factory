@@ -1,6 +1,7 @@
 var OnlineInvoice = function(jQuery, config) {
     var settings = {
-        currency: '$'
+        currency: '$',
+        invoiceElm: '#online-invoice'
     };
 
     jQuery.extend(settings, config);
@@ -13,11 +14,10 @@ var OnlineInvoice = function(jQuery, config) {
         this.description = description || '';
         this.line_price = parseFloat(line_price) || 0;
         this.amount = this.quantity * this.line_price;
-        console.log(this);
     };
 
     function format(template, values) {
-        template = $('#' + template).html();
+        template = jQuery('#' + template).html();
         var allValues = jQuery.extend({}, settings);
         jQuery.extend(allValues, values);
         jQuery.each(allValues, function(key, value) {
@@ -64,32 +64,50 @@ var OnlineInvoice = function(jQuery, config) {
         this.calculateTotal();
     }
 
+    function initLines() {
+        jQuery.each(this.getLines(), function(key, line) {
+            this.showLine(line);
+        });
+
+        // Initial Line
+        line = new InvoiceLine();
+        line.line_price = formatMoney(line.line_price);
+        line.amount = formatMoney(line.amount);
+        form = format('invoiceLineFormTemplate', line);
+        jQuery('#online-invoice tbody').append(form);
+
+        this.calculateTotal();
+    }
+
+    function initEvents() {
+        // Detect value changes
+        jQuery('#online-invoice').on('change', 'input', jQuery.proxy(handleFormChange, this));
+
+        // Add the new line
+        jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleNewLine, this));
+    }
+
+    function initInvoice(template, status, xhr) {
+        jQuery('body').append(template);
+
+        this.invoiceElm.html(format('invoiceTemplate', {}));
+
+        jQuery.proxy(initLines, this)();
+
+        jQuery.proxy(initEvents, this)();
+    }
+
     return {
         Invoice: {
             lines: [],
             currentLine: null
         },
 
+        invoiceElm: jQuery(settings.invoiceElm),
+
         init: function() {
-            console.log('starting up...');
-            jQuery.each(this.getLines(), function(key, line) {
-                this.showLine(line);
-            });
-
-            // Initial Line
-            line = new InvoiceLine();
-            line.line_price = formatMoney(line.line_price);
-            line.amount = formatMoney(line.amount);
-            form = format('invoiceLineForm', line);
-            jQuery('#online-invoice tbody').append(form);
-
-            this.calculateTotal();
-
-            // Detect value changes
-            jQuery('#online-invoice').on('change', 'input', jQuery.proxy(handleFormChange, this));
-
-            // Add the new line
-            jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleNewLine, this));
+            // Get the templates
+            jQuery.get('./assets/templates/invoice.js.html', jQuery.proxy(initInvoice, this), 'html');
         },
 
         getLines: function() {
@@ -113,7 +131,7 @@ var OnlineInvoice = function(jQuery, config) {
         showLine: function(line) {
             line.line_price = formatMoney(line.line_price);
             line.amount = formatMoney(line.amount);
-            line = format('invoiceLine', line);
+            line = format('invoiceLineTemplate', line);
             jQuery('#line-form').before(line);
         },
 
@@ -124,7 +142,7 @@ var OnlineInvoice = function(jQuery, config) {
             });
 
             var values = { total: formatMoney(total) };
-            template = format('invoiceTotal', values);
+            template = format('invoiceTotalTemplate', values);
             jQuery('#invoice-total').html(template);
         }
     };
