@@ -8,6 +8,7 @@ var OnlineInvoice = function(jQuery, config) {
 
     var lineCount = 1;
 
+    // Auxiliary Objects
     var InvoiceLine = function(quantity, description, line_price) {
         this.line = lineCount;
         this.quantity = parseFloat(quantity) || 1;
@@ -16,6 +17,7 @@ var OnlineInvoice = function(jQuery, config) {
         this.amount = this.quantity * this.line_price;
     };
 
+    // Templating
     function format(template, values) {
         template = jQuery('#' + template).html();
         var allValues = jQuery.extend({}, settings);
@@ -27,13 +29,22 @@ var OnlineInvoice = function(jQuery, config) {
         return template;
     }
 
+    // Utility
     function formatMoney(number) {
         var parts = parseFloat(number).toFixed(2).toString().split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
     }
 
-    function handleNewLine(evt) {
+    function showLine(line) {
+        line.line_price = formatMoney(line.line_price);
+        line.amount = formatMoney(line.amount);
+        line = format('invoiceLineTemplate', line);
+        jQuery('#line-form').before(line);
+    }
+
+    // Handle Events
+    function handleConfirmLine(evt) {
         evt.preventDefault();
 
         $('#description').parent('td').removeClass('has-error');
@@ -44,12 +55,17 @@ var OnlineInvoice = function(jQuery, config) {
 
         if (description !== '') {
             line = new InvoiceLine(quantity, description, line_price);
-            this.addLine(line);
+            // Trigger the event
+            this.invoiceElm.trigger('invoice-line', line);
         } else {
             $('#description').parent('td').addClass('has-error');
         }
 
         return false;
+    }
+
+    function handleNewLine(evt, line) {
+        this.addLine(line);
     }
 
     function handleFormChange(evt) {
@@ -64,9 +80,20 @@ var OnlineInvoice = function(jQuery, config) {
         this.calculateTotal();
     }
 
+    // Init Methods
+    function initInvoice(template, status, xhr) {
+        jQuery('body').append(template);
+
+        this.invoiceElm.html(format('invoiceTemplate', {}));
+
+        jQuery.proxy(initLines, this)();
+
+        jQuery.proxy(initEvents, this)();
+    }
+
     function initLines() {
         jQuery.each(this.getLines(), function(key, line) {
-            this.showLine(line);
+            showLine(line);
         });
 
         // Initial Line
@@ -83,18 +110,11 @@ var OnlineInvoice = function(jQuery, config) {
         // Detect value changes
         jQuery('#online-invoice').on('change', 'input', jQuery.proxy(handleFormChange, this));
 
-        // Add the new line
-        jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleNewLine, this));
-    }
+        // Handle the Confirm Line Button
+        jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
 
-    function initInvoice(template, status, xhr) {
-        jQuery('body').append(template);
-
-        this.invoiceElm.html(format('invoiceTemplate', {}));
-
-        jQuery.proxy(initLines, this)();
-
-        jQuery.proxy(initEvents, this)();
+        // Add the new Line
+        this.invoiceElm.on('invoice-line', jQuery.proxy(handleNewLine, this));
     }
 
     return {
@@ -118,7 +138,7 @@ var OnlineInvoice = function(jQuery, config) {
             lineCount++;
             jQuery('#line-number').html(lineCount + '.');
             this.Invoice.lines.push(line);
-            this.showLine(line);
+            showLine(line);
             this.calculateTotal();
 
             // reset
@@ -126,13 +146,6 @@ var OnlineInvoice = function(jQuery, config) {
             $('#line_price').val('0.00');
             $('#quantity').val('1');
             jQuery.proxy(handleFormChange, this)();
-        },
-
-        showLine: function(line) {
-            line.line_price = formatMoney(line.line_price);
-            line.amount = formatMoney(line.amount);
-            line = format('invoiceLineTemplate', line);
-            jQuery('#line-form').before(line);
         },
 
         calculateTotal: function() {
