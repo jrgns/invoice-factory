@@ -1,7 +1,9 @@
 var OnlineInvoice = function(jQuery, config) {
     var settings = {
         currency: '$',
-        invoiceElm: '#online-invoice'
+        invoiceElm: '#online-invoice',
+        defaultFrom: 'Your Company',
+        defaultTo: 'Clients Inc.'
     };
 
     jQuery.extend(settings, config);
@@ -80,6 +82,36 @@ var OnlineInvoice = function(jQuery, config) {
         this.calculateTotal();
     }
 
+    function handleSetFrom(evt) {
+        jQuery(evt.target).replaceWith('<input type="text" class="" id="from">');
+        jQuery('#from').focus();
+    }
+
+    function handleSetTo(evt) {
+        jQuery(evt.target).replaceWith('<input type="text" class="" id="to">');
+        jQuery('#to').focus();
+    }
+
+    function handleLeaveFrom(evt) {
+        var value = jQuery('#from').val();
+        if (value === '') {
+            value = settings.defaultFrom;
+        } else {
+            this.invoiceElm.trigger('invoice-from', value);
+        }
+        $(evt.target).replaceWith('<span id="invoice-from">' + value + '</span>');
+    }
+
+    function handleLeaveTo(evt) {
+        var value = jQuery('#to').val();
+        if (value === '') {
+            value = settings.defaultTo;
+        } else {
+            this.invoiceElm.trigger('invoice-to', value);
+        }
+        jQuery(evt.target).replaceWith('<span id="invoice-to">' + value + '</span>');
+    }
+
     // Init Methods
     function initInvoice(template, status, xhr) {
         jQuery('body').append(template);
@@ -113,6 +145,19 @@ var OnlineInvoice = function(jQuery, config) {
         // Handle the Confirm Line Button
         jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
 
+        // Handle setting the From and To
+        this.invoiceElm.on('click', '#invoice-from', jQuery.proxy(handleSetFrom, this));
+        this.invoiceElm.on('click', '#invoice-to', jQuery.proxy(handleSetTo, this));
+
+        this.invoiceElm.on('focusout', '#from', jQuery.proxy(handleLeaveFrom, this));
+        this.invoiceElm.on('focusout', '#to', jQuery.proxy(handleLeaveTo, this));
+        this.invoiceElm.on('invoice-from', jQuery.proxy(function(evt, from) {
+            this.setFrom(from);
+        }, this));
+        this.invoiceElm.on('invoice-to', jQuery.proxy(function(evt, to) {
+            this.setTo(to);
+        }, this));
+
         // Add the new Line
         this.invoiceElm.on('invoice-line', jQuery.proxy(handleNewLine, this));
     }
@@ -120,7 +165,9 @@ var OnlineInvoice = function(jQuery, config) {
     return {
         Invoice: {
             lines: [],
-            currentLine: null
+            currentLine: null,
+            to: null,
+            from: null
         },
 
         invoiceElm: jQuery(settings.invoiceElm),
@@ -128,6 +175,14 @@ var OnlineInvoice = function(jQuery, config) {
         init: function() {
             // Get the templates
             jQuery.get('./assets/templates/invoice.js.html', jQuery.proxy(initInvoice, this), 'html');
+        },
+
+        setTo: function(to) {
+            this.Invoice.to = to;
+        },
+
+        setFrom: function(from) {
+            this.Invoice.from = from;
         },
 
         getLines: function() {
@@ -139,12 +194,12 @@ var OnlineInvoice = function(jQuery, config) {
             jQuery('#line-number').html(lineCount + '.');
             this.Invoice.lines.push(line);
             showLine(line);
-            this.calculateTotal();
 
             // reset
             $('#description').val('');
             $('#line_price').val('0.00');
             $('#quantity').val('1');
+
             jQuery.proxy(handleFormChange, this)();
         },
 
