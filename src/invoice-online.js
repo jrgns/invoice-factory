@@ -66,10 +66,6 @@ var OnlineInvoice = function(jQuery, config) {
         return false;
     }
 
-    function handleNewLine(evt, line) {
-        this.addLine(line);
-    }
-
     function handleFormChange(evt) {
         var quantity = parseFloat($('#quantity').val());
         var line_price = parseFloat($('#line_price').val());
@@ -151,6 +147,8 @@ var OnlineInvoice = function(jQuery, config) {
 
         this.invoiceElm.on('focusout', '#from', jQuery.proxy(handleLeaveFrom, this));
         this.invoiceElm.on('focusout', '#to', jQuery.proxy(handleLeaveTo, this));
+
+        // Set From and To
         this.invoiceElm.on('invoice-from', jQuery.proxy(function(evt, from) {
             this.setFrom(from);
         }, this));
@@ -159,7 +157,9 @@ var OnlineInvoice = function(jQuery, config) {
         }, this));
 
         // Add the new Line
-        this.invoiceElm.on('invoice-line', jQuery.proxy(handleNewLine, this));
+        this.invoiceElm.on('invoice-line', jQuery.proxy(function(evt, line) {
+            this.addLine(line);
+        }, this));
     }
 
     return {
@@ -177,8 +177,16 @@ var OnlineInvoice = function(jQuery, config) {
             jQuery.get('./assets/templates/invoice.js.html', jQuery.proxy(initInvoice, this), 'html');
         },
 
+        getTo: function() {
+            return this.Invoice.to;
+        },
+
         setTo: function(to) {
             this.Invoice.to = to;
+        },
+
+        getFrom: function() {
+            return this.Invoice.from;
         },
 
         setFrom: function(from) {
