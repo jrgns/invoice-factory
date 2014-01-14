@@ -17,6 +17,17 @@ module.exports = function(grunt) {
     },
     qunit: {
         all: ['test/**/*.html']
+    },
+    compress: {
+      main: {
+        options: {
+          archive: "<%= pkg.name %>_<%= pkg.version %>.zip",
+        },
+        files: [
+          { src: ['web/**'], dest: '/', filter: 'isFile' },
+          { src: ['Readme.md'], dest: '/', filter: 'isFile' }
+        ]
+      }
     }
   });
 
@@ -24,8 +35,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-qunit');
+  grunt.loadNpmTasks('grunt-contrib-compress');
 
   // Default task(s).
-  grunt.registerTask('default', ['jshint', 'uglify', 'qunit']);
+  grunt.registerTask('default', ['jshint', 'uglify']);
+
+  grunt.registerTask('full', ['jshint', 'uglify', 'qunit', 'compress']);
 
 };
