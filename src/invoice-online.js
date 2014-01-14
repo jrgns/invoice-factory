@@ -2,8 +2,12 @@ var OnlineInvoice = function(jQuery, config) {
     var settings = {
         currency: '$',
         invoiceElm: '#online-invoice',
-        defaultFrom: 'Your Company',
-        defaultTo: 'Clients Inc.'
+        from: 'Your Company',
+        to: 'Clients Inc.',
+        contact: 'finance@yourcompany.com',
+        date: formatDate(new Date()),
+        due_date: formatDate(new Date()),
+        description: 'Your most amazing invoice for our excellent service'
     };
 
     jQuery.extend(settings, config);
@@ -36,6 +40,15 @@ var OnlineInvoice = function(jQuery, config) {
         var parts = parseFloat(number).toFixed(2).toString().split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
+    }
+
+    function formatDate(date) {
+        var d = new Date(date);
+        var curr_date = d.getDate();
+        var curr_month = d.getMonth() + 1; //Months are zero based
+        curr_month = curr_month < 10 ? '0' + curr_month : curr_month;
+        var curr_year = d.getFullYear();
+        return curr_date + "-" + curr_month + "-" + curr_year;
     }
 
     function showLine(line) {
@@ -78,34 +91,17 @@ var OnlineInvoice = function(jQuery, config) {
         this.calculateTotal();
     }
 
-    function handleSetFrom(evt) {
-        jQuery(evt.target).replaceWith('<input type="text" class="" id="from">');
-        jQuery('#from').focus();
+    function handleSetDescription(evt) {
+        jQuery('#invoice-description-show').hide();
+        jQuery(evt.target).after('<textarea class="" id="invoice-description">' + jQuery('#invoice-description-show').html().trim() + '</textarea>');
+        jQuery('#invoice-description').focus();
     }
 
-    function handleSetTo(evt) {
-        jQuery(evt.target).replaceWith('<input type="text" class="" id="to">');
-        jQuery('#to').focus();
-    }
-
-    function handleLeaveFrom(evt) {
-        var value = jQuery('#from').val();
-        if (value === '') {
-            value = settings.defaultFrom;
-        } else {
-            this.invoiceElm.trigger('invoice-from', value);
-        }
-        $(evt.target).replaceWith('<span id="invoice-from">' + value + '</span>');
-    }
-
-    function handleLeaveTo(evt) {
-        var value = jQuery('#to').val();
-        if (value === '') {
-            value = settings.defaultTo;
-        } else {
-            this.invoiceElm.trigger('invoice-to', value);
-        }
-        jQuery(evt.target).replaceWith('<span id="invoice-to">' + value + '</span>');
+    function handleLeaveDescription(evt) {
+        var value = jQuery('#invoice-description').val();
+        this.invoiceElm.trigger('invoice-description', value);
+        jQuery('#invoice-description-show').show();
+        jQuery(evt.target).remove();
     }
 
     // Init Methods
@@ -141,20 +137,13 @@ var OnlineInvoice = function(jQuery, config) {
         // Handle the Confirm Line Button
         jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
 
-        // Handle setting the From and To
-        this.invoiceElm.on('click', '#invoice-from', jQuery.proxy(handleSetFrom, this));
-        this.invoiceElm.on('click', '#invoice-to', jQuery.proxy(handleSetTo, this));
+        // Handle setting the Description
+        this.invoiceElm.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this));
 
-        this.invoiceElm.on('focusout', '#from', jQuery.proxy(handleLeaveFrom, this));
-        this.invoiceElm.on('focusout', '#to', jQuery.proxy(handleLeaveTo, this));
+        this.invoiceElm.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this));
 
-        // Set From and To
-        this.invoiceElm.on('invoice-from', jQuery.proxy(function(evt, from) {
-            this.setFrom(from);
-        }, this));
-        this.invoiceElm.on('invoice-to', jQuery.proxy(function(evt, to) {
-            this.setTo(to);
-        }, this));
+        // Sync the view
+        this.invoiceElm.on('invoice-description invoice-from invoice-date invoice-due_date invoice-to', setElement);
 
         // Add the new Line
         this.invoiceElm.on('invoice-line', jQuery.proxy(function(evt, line) {
@@ -162,12 +151,20 @@ var OnlineInvoice = function(jQuery, config) {
         }, this));
     }
 
+    function setElement(id, value) {
+        id = id.type ? id.type : id;
+        jQuery('#' + id + '-show').html(value);
+    }
+
     return {
         Invoice: {
             lines: [],
             currentLine: null,
-            to: null,
-            from: null
+            to: settings.to,
+            from: settings.from,
+            description: settings.description,
+            date: settings.date,
+            due_date: settings.due_date
         },
 
         invoiceElm: jQuery(settings.invoiceElm),
@@ -183,6 +180,7 @@ var OnlineInvoice = function(jQuery, config) {
 
         setTo: function(to) {
             this.Invoice.to = to;
+            this.invoiceElm.trigger('invoice-to', to);
         },
 
         getFrom: function() {
@@ -191,6 +189,34 @@ var OnlineInvoice = function(jQuery, config) {
 
         setFrom: function(from) {
             this.Invoice.from = from;
+            this.invoiceElm.trigger('invoice-from', from);
+        },
+
+        getDescription: function() {
+            return this.Invoice.description;
+        },
+
+        setDescription: function(description) {
+            this.Invoice.description = description;
+            this.invoiceElm.trigger('invoice-description', description);
+        },
+
+        getDate: function() {
+            return this.Invoice.date;
+        },
+
+        setDate: function(date) {
+            this.Invoice.date = date;
+            this.invoiceElm.trigger('invoice-date', date);
+        },
+
+        getDueDate: function() {
+            return this.Invoice.due_date;
+        },
+
+        setDueDate: function(due_date) {
+            this.Invoice.due_date = due_date;
+            this.invoiceElm.trigger('invoice-due_date', due_date);
         },
 
         getLines: function() {
