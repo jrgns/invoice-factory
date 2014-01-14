@@ -1,0 +1,12 @@
+{
+  "name": "invoice-online",
+  "version": "0.1.0",
+  "description": "A JavaScript only invoice generator",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "2.4.1",
+    "grunt-contrib-nodeunit": "~0.2.0",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-qunit": "~0.3.0"
+  }
+}
