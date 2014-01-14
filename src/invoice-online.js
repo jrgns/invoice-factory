@@ -1,13 +1,7 @@
 var OnlineInvoice = function(jQuery, config) {
     var settings = {
         currency: '$',
-        invoiceElm: '#online-invoice',
-        from: 'Your Company',
-        to: 'Clients Inc.',
-        contact: 'finance@yourcompany.com',
-        date: formatDate(new Date()),
-        due_date: formatDate(new Date()),
-        description: 'Your most amazing invoice for our excellent service'
+        invoiceElm: '#online-invoice'
     };
 
     jQuery.extend(settings, config);
@@ -108,7 +102,7 @@ var OnlineInvoice = function(jQuery, config) {
     function initInvoice(template, status, xhr) {
         jQuery('body').append(template);
 
-        this.invoiceElm.html(format('invoiceTemplate', {}));
+        this.invoiceElm.html(format('invoiceTemplate', this.Invoice));
 
         jQuery.proxy(initLines, this)();
 
@@ -143,7 +137,7 @@ var OnlineInvoice = function(jQuery, config) {
         this.invoiceElm.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this));
 
         // Sync the view
-        this.invoiceElm.on('invoice-description invoice-from invoice-date invoice-due_date invoice-to', setElement);
+        this.invoiceElm.on('invoice-description invoice-from invoice-date invoice-due_date invoice-to invoice-contact', setElement);
 
         // Add the new Line
         this.invoiceElm.on('invoice-line', jQuery.proxy(function(evt, line) {
@@ -160,16 +154,19 @@ var OnlineInvoice = function(jQuery, config) {
         Invoice: {
             lines: [],
             currentLine: null,
-            to: settings.to,
-            from: settings.from,
-            description: settings.description,
-            date: settings.date,
-            due_date: settings.due_date
+            to: "Clients, Inc.",
+            from: "My Company",
+            description: "Online Invoice Script",
+            date: formatDate(new Date()),
+            due_date: formatDate(new Date()),
+            contact: 'finance@yourcompany.com'
         },
 
         invoiceElm: jQuery(settings.invoiceElm),
 
-        init: function() {
+        init: function(values) {
+            jQuery.extend(this.Invoice, values);
+
             // Get the templates
             jQuery.get('./assets/templates/invoice.js.html', jQuery.proxy(initInvoice, this), 'html');
         },
@@ -190,6 +187,15 @@ var OnlineInvoice = function(jQuery, config) {
         setFrom: function(from) {
             this.Invoice.from = from;
             this.invoiceElm.trigger('invoice-from', from);
+        },
+
+        getContact: function() {
+            return this.Invoice.contact;
+        },
+
+        setContact: function(contact) {
+            this.Invoice.contact = contact;
+            this.invoiceElm.trigger('invoice-contact', contact);
         },
 
         getDescription: function() {
@@ -248,4 +254,4 @@ var OnlineInvoice = function(jQuery, config) {
             jQuery('#invoice-total').html(template);
         }
     };
-}(jQuery);
+}(jQuery, config);

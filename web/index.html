@@ -11,10 +11,20 @@
         <div id="online-invoice"></div>
     </div>
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script>
+// Set Invoice config settings here
+var config = {
+    //currency: 'R'
+}
+    </script>
     <script src="assets/js/invoice.min.js"></script>
     <script>
 $(document).ready(function() {
-    OnlineInvoice.init();
+    // Values can be set when initializing
+    OnlineInvoice.init({ from: 'Hacker Planet'});
+
+    // Or afterwards
+    OnlineInvoice.setTo('Snow Planet');
 })
     </script>
 </body>
