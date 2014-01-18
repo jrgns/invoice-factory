@@ -8,9 +8,11 @@ var OnlineInvoice = function(jQuery, config) {
 
     var lineCount = 1;
 
+    var editing = false;
+
     // Auxiliary Objects
-    var InvoiceLine = function(quantity, description, line_price) {
-        this.line = lineCount;
+    var InvoiceLine = function(number, quantity, description, line_price) {
+        this.number = number || lineCount;
         this.quantity = parseFloat(quantity) || 1;
         this.description = description || '';
         this.line_price = parseFloat(line_price) || 0;
@@ -49,7 +51,8 @@ var OnlineInvoice = function(jQuery, config) {
         line.line_price = formatMoney(line.line_price);
         line.amount = formatMoney(line.amount);
         line = format('invoiceLineTemplate', line);
-        jQuery('#line-form').before(line);
+
+        jQuery('#line-form').replaceWith(line);
     }
 
     // Handle Events
@@ -61,11 +64,14 @@ var OnlineInvoice = function(jQuery, config) {
         var quantity = $('#quantity').val();
         var description = $('#description').val();
         var line_price = $('#line_price').val();
+        var number = editing ? editing : null;
 
         if (description !== '') {
-            line = new InvoiceLine(quantity, description, line_price);
+            line = new InvoiceLine(number, quantity, description, line_price);
             // Trigger the event
             this.invoiceElm.trigger('invoice-line', line);
+
+            editing = false;
         } else {
             $('#description').parent('td').addClass('has-error');
         }
@@ -73,9 +79,30 @@ var OnlineInvoice = function(jQuery, config) {
         return false;
     }
 
+    function handleEditLine(evt) {
+        var line = $(evt.target).parents('tr').first();
+
+        var number = parseFloat(line.find('.line-number').html());
+        var quantity = parseFloat(line.find('.line-quantity').html());
+        var description = line.find('.line-description').html();
+        var line_price = line.find('.line-line_price').html();
+        line_price = parseFloat(line_price.replace(/^[^0-9]*/, ''));
+
+        var lineObj = new InvoiceLine(number, quantity, description, line_price);
+
+        editing = number;
+
+        jQuery('#line-form').remove();
+
+        form = format('invoiceLineFormTemplate', lineObj);
+        line.replaceWith(form);
+
+        return false;
+    }
+
     function handleFormChange(evt) {
-        var quantity = parseFloat($('#quantity').val());
-        var line_price = parseFloat($('#line_price').val());
+        var quantity = parseFloat(jQuery('#quantity').val());
+        var line_price = parseFloat(jQuery('#line_price').val());
         var amount = quantity * line_price;
 
         // Format and set the amounts
@@ -106,6 +133,8 @@ var OnlineInvoice = function(jQuery, config) {
 
         jQuery.proxy(initLines, this)();
 
+        jQuery.proxy(showLineForm, this)();
+
         jQuery.proxy(initEvents, this)();
     }
 
@@ -114,14 +143,15 @@ var OnlineInvoice = function(jQuery, config) {
             showLine(line);
         });
 
-        // Initial Line
+        this.calculateTotal();
+    }
+
+    function showLineForm() {
         line = new InvoiceLine();
         line.line_price = formatMoney(line.line_price);
         line.amount = formatMoney(line.amount);
         form = format('invoiceLineFormTemplate', line);
         this.invoiceElm.find('tbody').append(form);
-
-        this.calculateTotal();
     }
 
     function initEvents() {
@@ -130,6 +160,9 @@ var OnlineInvoice = function(jQuery, config) {
 
         // Handle the Confirm Line Button
         this.invoiceElm.on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
+
+        // Handle the Edit Line Button
+        this.invoiceElm.on('click', '.edit-line', jQuery.proxy(handleEditLine, this));
 
         // Handle setting the Description
         this.invoiceElm.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this));
@@ -230,15 +263,15 @@ var OnlineInvoice = function(jQuery, config) {
         },
 
         addLine: function(line) {
-            lineCount++;
-            jQuery('#line-number').html(lineCount + '.');
-            this.Invoice.lines.push(line);
+            if (editing === false) {
+                lineCount++;
+                jQuery('#line-number').html(lineCount + '.');
+            }
+            this.Invoice.lines[line.number - 1] = line;
             showLine(line);
 
             // reset
-            $('#description').val('');
-            $('#line_price').val('0.00');
-            $('#quantity').val('1');
+            jQuery.proxy(showLineForm, this)();
 
             jQuery.proxy(handleFormChange, this)();
         },
