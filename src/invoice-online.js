@@ -119,17 +119,17 @@ var OnlineInvoice = function(jQuery, config) {
         line.line_price = formatMoney(line.line_price);
         line.amount = formatMoney(line.amount);
         form = format('invoiceLineFormTemplate', line);
-        jQuery('#online-invoice tbody').append(form);
+        this.invoiceElm.find('tbody').append(form);
 
         this.calculateTotal();
     }
 
     function initEvents() {
         // Detect value changes
-        jQuery('#online-invoice').on('change', 'input', jQuery.proxy(handleFormChange, this));
+        this.invoiceElm.on('change', 'input', jQuery.proxy(handleFormChange, this));
 
         // Handle the Confirm Line Button
-        jQuery('#online-invoice').on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
+        this.invoiceElm.on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
 
         // Handle setting the Description
         this.invoiceElm.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this));
