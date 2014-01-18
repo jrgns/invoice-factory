@@ -17,7 +17,8 @@ var config = {
     //currency: 'R'
 }
     </script>
-    <script src="assets/js/invoice.min.js"></script>
+    <!--<script src="assets/js/invoice.min.js"></script>-->
+    <script src="../src/invoice-online.js"></script>
     <script>
 $(document).ready(function() {
     // Values can be set when initializing
@@ -25,6 +26,9 @@ $(document).ready(function() {
 
     // Or afterwards
     OnlineInvoice.setTo('Snow Planet');
+
+    // For Tax, set the name and the rate
+    OnlineInvoice.setTax({name: "VAT", rate: 0.14});
 })
     </script>
 </body>

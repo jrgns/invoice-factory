@@ -5,6 +5,13 @@ var OnlineInvoice = function(jQuery, config) {
     };
 
     jQuery.extend(settings, config);
+    // Get the templates
+    jQuery.ajax({
+        url: './assets/templates/invoice.js.html',
+        success: function(template, xhr, status) { jQuery('body').append(template); },
+        dataType: 'html',
+        async: false
+    });
 
     var lineCount = 1;
 
@@ -55,15 +62,24 @@ var OnlineInvoice = function(jQuery, config) {
         jQuery('#line-form').replaceWith(line);
     }
 
+    function showLineForm() {
+        line = new InvoiceLine();
+        line.line_price = formatMoney(line.line_price);
+        line.amount = formatMoney(line.amount);
+
+        form = format('invoiceLineFormTemplate', line);
+        this.invoiceElm.find('tbody').append(form);
+    }
+
     // Handle Events
     function handleConfirmLine(evt) {
         evt.preventDefault();
 
-        $('#description').parent('td').removeClass('has-error');
+        jQuery('#description').parent('td').removeClass('has-error');
 
-        var quantity = $('#quantity').val();
-        var description = $('#description').val();
-        var line_price = $('#line_price').val();
+        var quantity = jQuery('#quantity').val();
+        var description = jQuery('#description').val();
+        var line_price = jQuery('#line_price').val();
         var number = editing ? editing : null;
 
         if (description !== '') {
@@ -73,14 +89,14 @@ var OnlineInvoice = function(jQuery, config) {
 
             editing = false;
         } else {
-            $('#description').parent('td').addClass('has-error');
+            jQuery('#description').parent('td').addClass('has-error');
         }
 
         return false;
     }
 
     function handleEditLine(evt) {
-        var line = $(evt.target).parents('tr').first();
+        var line = jQuery(evt.target).parents('tr').first();
 
         var number = parseFloat(line.find('.line-number').html());
         var quantity = parseFloat(line.find('.line-quantity').html());
@@ -126,18 +142,6 @@ var OnlineInvoice = function(jQuery, config) {
     }
 
     // Init Methods
-    function initInvoice(template, status, xhr) {
-        jQuery('body').append(template);
-
-        this.invoiceElm.html(format('invoiceTemplate', this.Invoice));
-
-        jQuery.proxy(initLines, this)();
-
-        jQuery.proxy(showLineForm, this)();
-
-        jQuery.proxy(initEvents, this)();
-    }
-
     function initLines() {
         jQuery.each(this.getLines(), function(key, line) {
             showLine(line);
@@ -146,12 +150,8 @@ var OnlineInvoice = function(jQuery, config) {
         this.calculateTotal();
     }
 
-    function showLineForm() {
-        line = new InvoiceLine();
-        line.line_price = formatMoney(line.line_price);
-        line.amount = formatMoney(line.amount);
-        form = format('invoiceLineFormTemplate', line);
-        this.invoiceElm.find('tbody').append(form);
+    function initTax() {
+        jQuery.proxy(setTaxView, this)();
     }
 
     function initEvents() {
@@ -170,7 +170,8 @@ var OnlineInvoice = function(jQuery, config) {
         this.invoiceElm.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this));
 
         // Sync the view
-        this.invoiceElm.on('invoice-description invoice-from invoice-date invoice-due_date invoice-to invoice-contact', setElement);
+        this.invoiceElm.on('invoice-description invoice-from invoice-date invoice-due_date invoice-to invoice-contact invoice-tax', jQuery.proxy(setElement, this));
+        this.invoiceElm.on('invoice-tax', jQuery.proxy(setTaxView, this));
 
         // Add the new Line
         this.invoiceElm.on('invoice-line', jQuery.proxy(function(evt, line) {
@@ -183,6 +184,24 @@ var OnlineInvoice = function(jQuery, config) {
         jQuery('#' + id + '-show').html(value);
     }
 
+    function setTaxView() {
+        if (this.Invoice.tax) {
+            var values = {
+                rate: formatMoney(this.Invoice.tax.rate * 100),
+                amount: formatMoney(OnlineInvoice.getTaxAmount()),
+                name: this.Invoice.tax.name
+            };
+            var taxLine = format('invoiceTaxTemplate', values);
+
+            if (jQuery('#invoice-tax').length === 0) {
+                // Add the line
+                this.invoiceElm.find('table').after(taxLine);
+            } else {
+                this.invoiceElm.find('#invoice-tax').replaceWith(taxLine);
+            }
+        }
+    }
+
     return {
         Invoice: {
             lines: [],
@@ -192,7 +211,8 @@ var OnlineInvoice = function(jQuery, config) {
             description: "Online Invoice Script",
             date: formatDate(new Date()),
             due_date: formatDate(new Date()),
-            contact: 'finance@yourcompany.com'
+            contact: 'finance@yourcompany.com',
+            tax: null
         },
 
         invoiceElm: jQuery(settings.invoiceElm),
@@ -200,8 +220,15 @@ var OnlineInvoice = function(jQuery, config) {
         init: function(values) {
             jQuery.extend(this.Invoice, values);
 
-            // Get the templates
-            jQuery.get('./assets/templates/invoice.js.html', jQuery.proxy(initInvoice, this), 'html');
+            this.invoiceElm.html(format('invoiceTemplate', this.Invoice));
+
+            jQuery.proxy(initLines, this)();
+
+            jQuery.proxy(showLineForm, this)();
+
+            jQuery.proxy(initEvents, this)();
+
+            jQuery.proxy(initTax, this)();
         },
 
         getTo: function() {
@@ -258,6 +285,15 @@ var OnlineInvoice = function(jQuery, config) {
             this.invoiceElm.trigger('invoice-due_date', due_date);
         },
 
+        getTax: function() {
+            return this.Invoice.tax;
+        },
+
+        setTax: function(tax) {
+            this.Invoice.tax = tax;
+            this.invoiceElm.trigger('invoice-tax', tax);
+        },
+
         getLines: function() {
             return this.Invoice.lines;
         },
@@ -276,15 +312,36 @@ var OnlineInvoice = function(jQuery, config) {
             jQuery.proxy(handleFormChange, this)();
         },
 
-        calculateTotal: function() {
+        getTotal: function(withTax) {
             var total = 0;
             jQuery.each(this.getLines(), function(key, line) {
                 total += parseFloat(line.amount);
             });
 
+            // Calculate Tax
+            if (this.Invoice.tax && withTax) {
+                total += this.getTaxAmount();
+            }
+
+            return total;
+        },
+
+        getTaxAmount: function() {
+            if (this.Invoice.tax && this.Invoice.tax.rate) {
+                return this.getTotal(false) * this.Invoice.tax.rate;
+            } else {
+                return 0;
+            }
+        },
+
+        calculateTotal: function() {
+            var total = this.getTotal(true);
+
             var values = { total: formatMoney(total) };
             template = format('invoiceTotalTemplate', values);
             jQuery('#invoice-total').html(template);
+
+            jQuery.proxy(setTaxView, this)();
         }
     };
 }(jQuery, config);
