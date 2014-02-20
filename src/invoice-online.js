@@ -209,7 +209,7 @@ var OnlineInvoice = function(jQuery, config) {
             to: "Clients, Inc.",
             from: "My Company",
             description: "Online Invoice Script",
-            date: formatDate(new Date()),
+            date: formatDate    (new Date()),
             due_date: formatDate(new Date()),
             contact: 'finance@yourcompany.com',
             tax: null
