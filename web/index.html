@@ -18,10 +18,13 @@ var config = {
 }
     </script>
     <!--<script src="assets/js/invoice.min.js"></script>-->
+    <script src="../src/templating.js"></script>
     <script src="../src/invoice.js"></script>
     <script>
 $(document).ready(function() {
-    invoice = invoiceFactory.init( { taxRate: 0.14 } );
+    values = {
+    }
+    invoice = invoiceFactory.init( { taxRate: 0.14 } ).generate(values);
 })
     </script>
 </body>

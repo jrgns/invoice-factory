@@ -1,7 +1,6 @@
 Array.prototype.each = Array.prototype.forEach
 
 class Base
-
     fireEvent: (@name, @data) ->
 
     readable: (args...) ->
@@ -33,7 +32,16 @@ class Base
                 else
                     this['_' + arg] = value
 
-                @fireEvent 'invoice-' + arg, value
+                # Fire the Event
+                @fireEvent arg, value
+
+                # Render the value
+                if "render#{cap}" of this
+                    html = this["render#{cap}"] value
+                else
+                    html = value
+                # Consider renaming this to rather use data-model or something
+                jQuery('#invoice-' + arg + '-show').html(html);
 
 class InvoiceLine extends Base
     constructor: (invoice, number, quantity, description, line_price) ->
@@ -50,27 +58,33 @@ class InvoiceLine extends Base
 
 class Invoice extends Base
 
-    element = null
     taxation = { rate: null, name: null }
 
-    constructor: (@settings) ->
-        element = @settings.element
-
+    constructor: (values, @element) ->
         taxation.rate = @settings?.taxRate ? null
-        taxation.name = @settings?.taxName ? null
+        taxation.name = @settings?.taxName ? 'Tax'
 
-        @accessor 'to'
-        @accessor 'from'
-        @accessor 'contact'
-        @accessor 'description'
-        @accessor 'date'
-        @accessor 'dueDate'
-        @accessor 'lines'
-        @accessor 'tax'
-        @accessor 'total'
+        @accessor 'currency', 'to', 'from', 'contact', 'description', 'date', 'dueDate', 'lines', 'total', 'tax'
 
-    fireEvent: (@name, @data) ->
-        element.trigger(@name, @data)
+        @currency = values?.currency ? '$'
+
+        @to = values?.to ? 'Client'
+        @from = values?.from ? 'HackerPlanet'
+        @contact = values?.contact ? 'info@hackerpla.net'
+        @description = values?.description ? 'Client Side Invoicing'
+        @date = values?.date ? new Date()
+        @dueDate = values?.dueDate ? new Date().setDate(new Date().getDate() + 7)
+        @lines = values?.lines ? []
+
+        # Rather calculate these
+        @tax = values?.tax
+        @total = values?.total
+
+    fireEvent: (name, data) ->
+        @element.trigger('invoice-' + name, data)
+
+    renderTotal: (value) ->
+        tmpl('invoiceTotalTemplate', { total: value, currency: @currency } )
 
     # getTotal: (@withTax) ->
     #     if @withTax
@@ -79,18 +93,13 @@ class Invoice extends Base
     #         @_total
 
 class InvoiceFactory extends Base
-    constructor: (@jQuery) ->
+    constructor: ->
         @accessor 'template_path'
 
     init: (@settings) ->
-        jQuery = @jQuery
-
         @settings.element = jQuery(@settings?.element ? '#online-invoice')
 
-        # Check and remove the template path from settings
         @template_path = @settings?.template_path ? './assets/templates/invoice.js.html'
-        if @settings?.template_path?
-            delete @settings.template_path
 
         # Retrieve the templates
         jQuery.ajax({
@@ -100,9 +109,33 @@ class InvoiceFactory extends Base
             async: false
         })
 
-        new Invoice(@settings)
+        @registerEvents()
 
-    registerEvents: (element) ->
-        element.on('change', 'input', @jQuery.proxy(@handleFormChange, this))
+        this
 
-window.invoiceFactory = new InvoiceFactory(jQuery)
+    generate: (values) ->
+        invoice = new Invoice(values, @settings.element)
+
+        @settings.element.html(tmpl('invoiceTemplate', invoice))
+
+        invoice
+
+    registerEvents: () ->
+        # Detect value changes
+        #@settings.element.on('change', 'input', jQuery.proxy(@handleFormChange, this))
+
+        # Handle the Confirm Line Button
+        #@settings.element.on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
+
+        # Handle the Edit Line Button
+        #@settings.element.on('click', '.edit-line', jQuery.proxy(handleEditLine, this));
+
+        # Handle setting the Description
+        #@settings.element.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this));
+
+        #@settings.element.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this));
+
+        # Sync the view
+        #@settings.element.on('invoice-tax', jQuery.proxy(setTaxView, this));
+
+window.invoiceFactory = new InvoiceFactory()

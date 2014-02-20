@@ -11,21 +11,21 @@
     </div>
     <div class="row">
         <div class="col-lg-6">
-            <h3><span class="text-muted">To: </span><span id="invoice-to-show">{{ to }}</span></h3>
+            <h3><span class="text-muted">To: </span><span id="invoice-to-show"><%= to %></span></h3>
             <div id="invoice-description-show">
-                {{ description }}
+                <%= description %>
             </div>
         </div>
         <div class="col-lg-6 text-right">
-            <h3><span class="text-muted">From: </span><span id="invoice-from-show">{{ from }}</span></h3>
+            <h3><span class="text-muted">From: </span><span id="invoice-from-show"><%= from %></span></h3>
             <div>
-                <label id="invoice-contact-show">{{ contact }}</label>
+                <label id="invoice-contact-show"><%= contact %></label>
             </div>
             <div>
-                <label>Date:</label> <span id="invoice-date-show">{{ date }}</span>
+                <label>Date:</label> <span id="invoice-date-show"><%= date_format(date) %></span>
             </div>
             <div>
-                <label>Due Date:</label> <span id="invoice-due_date-show">{{ due_date }}</span>
+                <label>Due Date:</label> <span id="invoice-dueDate-show"><%= date_format(dueDate) %></span>
             </div>
         </div>
     </div>
@@ -45,7 +45,7 @@
                 <tbody>
                 </tbody>
             </table>
-            <h3 class="text-right">Total: <span id="invoice-total">0.00</span></h3>
+            <h3 class="text-right">Total: <span id="invoice-total-show">empty</span></h3>
         </form>
     </div>
     <hr>
@@ -56,31 +56,31 @@
 
 <script type="text/html" id="invoiceLineTemplate">
     <tr class="invoice-line">
-        <td class="line-number">{{ number }}.</td>
-        <td class="line-quantity">{{ quantity }}</td>
-        <td class="line-description">{{ description }}</td>
-        <td class="line-line_price">{{ currency }}&nbsp;{{ line_price }}</td>
-        <td class="line-amount">{{ currency }}&nbsp;{{ amount }}</td>
+        <td class="line-number"><%= number %>.</td>
+        <td class="line-quantity"><%= quantity %></td>
+        <td class="line-description"><%= description %></td>
+        <td class="line-line_price"><%= currency %>&nbsp;<%= money_format(amount) %></td>
+        <td class="line-amount"><%= currency %>&nbsp;<%= money_format(amount) %></td>
         <td class="text-center"><a href="#" class="edit-line"><span class="glyphicon glyphicon-edit"></span></a></td>
     </tr>
 </script>
 
 <script type="text/html" id="invoiceTaxTemplate">
     <h4 id="invoice-tax" class="text-right">
-        <span class="text-muted">{{ name }} @ {{ rate }}%</span>
-        <span id="tax-amount">{{ currency }}&nbsp;{{ amount }}</span>
+        <span class="text-muted"><%= name %> @ <%= rate %>%</span>
+        <span id="tax-amount"><%= currency %>&nbsp;<%= money_format(amount) %></span>
     </h4>
 </script>
 
 <script type="text/html" id="invoiceLineFormTemplate">
     <tr id="line-form">
-        <td id="line-number">{{ number }}.</td>
-        <td class="col-lg-1"><input type="text" name="quantity" id="quantity" class="form-control" value="{{ quantity }}"></td>
-        <td class="col-lg-5"><input type="text" name="description" id="description" class="form-control" value="{{ description }}"></td>
-        <td><div class="input-group"><span class="input-group-addon">{{ currency }}</span><input type="text" name="line_price" id="line_price" class="form-control" value="{{ line_price }}"></div></td>
-        <td><div class="input-group"><span class="input-group-addon">{{ currency }}</span><input type="text" readonly="readonly" name="amount" id="amount" class="form-control" value="{{ amount }}"></div></td>
+        <td id="line-number"><%= number %>.</td>
+        <td class="col-lg-1"><input type="text" name="quantity" id="quantity" class="form-control" value="<%= quantity %>"></td>
+        <td class="col-lg-5"><input type="text" name="description" id="description" class="form-control" value="<%= description %>"></td>
+        <td><div class="input-group"><span class="input-group-addon"><%= currency %></span><input type="text" name="line_price" id="line_price" class="form-control" value="<%= line_price %>"></div></td>
+        <td><div class="input-group"><span class="input-group-addon"><%= currency %></span><input type="text" readonly="readonly" name="amount" id="amount" class="form-control" value="<%= amount %>"></div></td>
         <td><input type="submit" class="btn btn-default" value="Confirm Line" id="confirm-line"></td>
     </tr>
 </script>
 
-<script type="text/html" id="invoiceTotalTemplate">{{ currency }}&nbsp;{{ total }}</script>
+<script type="text/html" id="invoiceTotalTemplate"><%= currency %>&nbsp;<%= money_format(total) %></script>
