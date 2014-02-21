@@ -35,26 +35,21 @@ class Base
                 # Fire the Event
                 @fireEvent arg, value
 
-                # Render the value
-                if "render#{cap}" of this
-                    html = this["render#{cap}"] value
-                else
-                    html = value
-                # Consider renaming this to rather use data-model or something
-                jQuery('#invoice-' + arg + '-show').html(html);
-
 class InvoiceLine extends Base
-    constructor: (invoice, number, quantity, description, line_price) ->
-        @accessor 'invoice', 'number', 'quantity', 'description', 'line_price'
-        @readable 'amount'
+    constructor: (invoice, description, quantity, line_price, currency) ->
+        @accessor 'invoice', 'description', 'quantity', 'line_price', 'currency'
+        @readable 'amount', 'number'
 
         @invoice = invoice
         @quantity = quantity
         @line_price = line_price
         @description = description
+        @currency = currency ? invoice.currency
 
-        @amount = @quantity * @line_price
-        @number ?= invoice.lines.length + 1
+        @_number = invoice.lines.length + 1
+
+    getAmount: ->
+        @_quantity * @_line_price
 
 class Invoice extends Base
 
@@ -78,19 +73,58 @@ class Invoice extends Base
 
         # Rather calculate these
         @tax = values?.tax
-        @total = values?.total
 
     fireEvent: (name, data) ->
         @element.trigger('invoice-' + name, data)
 
-    renderTotal: (value) ->
-        tmpl('invoiceTotalTemplate', { total: value, currency: @currency } )
+        # Render the value
+        cap = "#{name[0].toUpperCase()}#{name[1..-1]}"
+        if "render#{cap}" of this
+            html = this["render#{cap}"] data
+        else
+            html = data
 
-    # getTotal: (@withTax) ->
-    #     if @withTax
-    #         @_total * (1 + taxation.rate)
-    #     else
-    #         @_total
+        @showElement(name, html)
+
+    showElement: (name, html) ->
+        # Consider renaming this to rather use data-model or something
+        jQuery('#invoice-' + name + '-show').html(html);
+
+    renderTotal: (total) ->
+        total ?= @total
+
+        tmpl('invoiceTotalTemplate', { total: total, currency: @currency } )
+
+    renderLines: (lines) ->
+        lines ?= @lines
+
+        jQuery('#invoice-lines').html('')
+
+        lines = lines.reduce ((lines, line) ->
+            lines += tmpl('invoiceLineTemplate', line)), ''
+
+        # TODO Add tax line if necessary
+
+        lines
+
+    getTax: ->
+        @_total * taxation.rate
+
+    getTotal: (@withTax = true) ->
+        @_total = @lines.reduce ((total, line) ->
+            total + line.amount), 0
+
+        if @withTax
+            @_total + @getTax()
+        else
+            @_total
+
+    addLine: (line) ->
+        if line not in @_lines
+            @_lines.push(line)
+
+        @fireEvent 'lines', @lines
+        @fireEvent 'total', @total
 
 class InvoiceFactory extends Base
     constructor: ->
@@ -117,6 +151,10 @@ class InvoiceFactory extends Base
         invoice = new Invoice(values, @settings.element)
 
         @settings.element.html(tmpl('invoiceTemplate', invoice))
+
+        # Both of these work, but I don't like either of them.
+        # invoice.total = 0 # This won't work if we begin with a number of lines
+        # invoice.showElement('total', invoice.renderTotal()) # This looks hackish
 
         invoice
 
