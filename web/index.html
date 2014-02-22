@@ -23,8 +23,9 @@ var config = {
     <script>
 $(document).ready(function() {
     values = {
+        taxRate: 0.14
     }
-    invoice = invoiceFactory.init( { taxRate: 0.14 } ).generate(values);
+    invoice = invoiceFactory.init().generate(values);
 })
     </script>
 </body>

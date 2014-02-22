@@ -45,7 +45,15 @@
                 <tbody id="invoice-lines-show">
                 </tbody>
             </table>
-            <h3 class="text-right">Total: <span id="invoice-total-show">empty</span></h3>
+            <% if (taxation.rate != null) { %>
+                <h4 id="invoice-tax" class="text-right">
+                    <span class="text-muted">
+                        <%= taxation.name %> @ <%= money_format(taxation.rate * 100) %>%
+                    </span>
+                    <%= currency %>&nbsp;<span id="invoice-tax-show"><%= money_format(tax) %></span>
+                </h4>
+            <% } %>
+            <h3 class="text-right">Total: <%= currency %>&nbsp;<span id="invoice-total-show"><%= money_format(total) %></span></h3>
         </form>
     </div>
     <hr>
@@ -59,28 +67,20 @@
         <td class="line-number"><%= number %>.</td>
         <td class="line-quantity"><%= quantity %></td>
         <td class="line-description"><%= description %></td>
-        <td class="line-line_price"><%= currency %>&nbsp;<%= money_format(amount) %></td>
+        <td class="line-linePrice"><%= currency %>&nbsp;<%= money_format(amount) %></td>
         <td class="line-amount"><%= currency %>&nbsp;<%= money_format(amount) %></td>
         <td class="text-center"><a href="#" class="edit-line"><span class="glyphicon glyphicon-edit"></span></a></td>
     </tr>
 </script>
 
-<script type="text/html" id="invoiceTaxTemplate">
-    <h4 id="invoice-tax" class="text-right">
-        <span class="text-muted"><%= name %> @ <%= rate %>%</span>
-        <span id="tax-amount"><%= currency %>&nbsp;<%= money_format(amount) %></span>
-    </h4>
-</script>
-
 <script type="text/html" id="invoiceLineFormTemplate">
     <tr id="line-form">
         <td id="line-number"><%= number %>.</td>
-        <td class="col-lg-1"><input type="text" name="quantity" id="quantity" class="form-control" value="<%= quantity %>"></td>
+        <td class="col-lg-1"><input type="text" name="quantity" id="quantity" class="form-control" value="<%= money_format(quantity) %>"></td>
         <td class="col-lg-5"><input type="text" name="description" id="description" class="form-control" value="<%= description %>"></td>
-        <td><div class="input-group"><span class="input-group-addon"><%= currency %></span><input type="text" name="line_price" id="line_price" class="form-control" value="<%= line_price %>"></div></td>
-        <td><div class="input-group"><span class="input-group-addon"><%= currency %></span><input type="text" readonly="readonly" name="amount" id="amount" class="form-control" value="<%= amount %>"></div></td>
+        <td><div class="input-group"><span class="input-group-addon"><%= currency %></span><input type="text" name="linePrice" id="linePrice" class="form-control" value="<%= money_format(linePrice) %>"></div></td>
+        <td><div class="input-group"><span class="input-group-addon"><%= currency %></span><input type="text" readonly="readonly" name="amount" id="amount" class="form-control" value="<%= money_format(amount) %>"></div></td>
         <td><input type="submit" class="btn btn-default" value="Confirm Line" id="confirm-line"></td>
     </tr>
 </script>
 
-<script type="text/html" id="invoiceTotalTemplate"><%= currency %>&nbsp;<%= money_format(total) %></script>

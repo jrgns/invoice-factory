@@ -1,5 +1,8 @@
 Array.prototype.each = Array.prototype.forEach
 
+currentInvoice = null
+currentLine = null
+
 class Base
     fireEvent: (@name, @data) ->
 
@@ -36,43 +39,48 @@ class Base
                 @fireEvent arg, value
 
 class InvoiceLine extends Base
-    constructor: (invoice, description, quantity, line_price, currency) ->
-        @accessor 'invoice', 'description', 'quantity', 'line_price', 'currency'
-        @readable 'amount', 'number'
+    constructor: (invoice, description, quantity, linePrice, currency) ->
+        @accessor 'invoice', 'description', 'quantity', 'linePrice'
+        @readable 'amount', 'number', 'currency'
 
         @invoice = invoice
-        @quantity = quantity
-        @line_price = line_price
-        @description = description
-        @currency = currency ? invoice.currency
+        @quantity = quantity ? 1
+        @linePrice = linePrice ? 0
+        @description = description ? ''
+        @_currency = currency ? invoice.currency
 
         @_number = invoice.lines.length + 1
 
     getAmount: ->
-        @_quantity * @_line_price
+        @_quantity * @_linePrice
 
 class Invoice extends Base
-
-    taxation = { rate: null, name: null }
-
     constructor: (values, @element) ->
-        taxation.rate = @settings?.taxRate ? null
-        taxation.name = @settings?.taxName ? 'Tax'
+        @accessor 'to', 'from', 'contact', 'description', 'date', 'dueDate', 'lines', 'total', 'tax'
+        @readable 'currency', 'taxation'
 
-        @accessor 'currency', 'to', 'from', 'contact', 'description', 'date', 'dueDate', 'lines', 'total', 'tax'
+        values ?= {}
 
-        @currency = values?.currency ? '$'
+        # Meta Info
+        @_currency = values.currency ? '$'
 
-        @to = values?.to ? 'Client'
-        @from = values?.from ? 'HackerPlanet'
-        @contact = values?.contact ? 'info@hackerpla.net'
-        @description = values?.description ? 'Client Side Invoicing'
-        @date = values?.date ? new Date()
-        @dueDate = values?.dueDate ? new Date().setDate(new Date().getDate() + 7)
-        @lines = values?.lines ? []
+        @_taxation = {
+            rate: values.taxRate ? null,
+            name: values.taxName ? 'Tax'
+        }
 
-        # Rather calculate these
-        @tax = values?.tax
+        # Default Values
+        @to = values.to ? 'Client'
+        @from = values.from ? 'HackerPlanet'
+        @contact = values.contact ? 'info@hackerpla.net'
+        @description = values.description ? 'Client Side Invoicing'
+        @date = values.date ? new Date()
+        @dueDate = values.dueDate ? new Date().setDate(new Date().getDate() + 7)
+
+        # Setup total, lines and Tax
+        @total = 0
+        @lines = []
+        @addLine line for line in values.lines ? []
 
     fireEvent: (name, data) ->
         @element.trigger('invoice-' + name, data)
@@ -90,10 +98,23 @@ class Invoice extends Base
         # Consider renaming this to rather use data-model or something
         jQuery('#invoice-' + name + '-show').html(html);
 
+    render: () ->
+        @element.html(tmpl('invoiceTemplate', this))
+
+    renderForm: () ->
+        currentLine = new InvoiceLine(this)
+        formHtml = tmpl('invoiceLineFormTemplate', currentLine)
+        @element.find('#invoice-lines-show').append(formHtml)
+
     renderTotal: (total) ->
         total ?= @total
 
-        tmpl('invoiceTotalTemplate', { total: total, currency: @currency } )
+        money_format(total)
+
+    renderTax: (tax) ->
+        tax ?= @tax
+
+        money_format(tax)
 
     renderLines: (lines) ->
         lines ?= @lines
@@ -108,13 +129,14 @@ class Invoice extends Base
         lines
 
     getTax: ->
-        @_total * taxation.rate
+        @tax = @_total * @_taxation.rate
 
-    getTotal: (@withTax = true) ->
-        @_total = @lines.reduce ((total, line) ->
+    getTotal: (withTax = true) ->
+        @_total = @lines?.reduce ((total, line) ->
             total + line.amount), 0
+        @_total ?= 0
 
-        if @withTax
+        if withTax
             @_total + @getTax()
         else
             @_total
@@ -131,9 +153,10 @@ class InvoiceFactory extends Base
         @accessor 'template_path'
 
     init: (@settings) ->
-        @settings.element = jQuery(@settings?.element ? '#online-invoice')
+        @settings ?= {}
+        @settings.element = jQuery(@settings.element ? '#online-invoice')
 
-        @template_path = @settings?.template_path ? './assets/templates/invoice.js.html'
+        @template_path = @settings.template_path ? './assets/templates/invoice.js.html'
 
         # Retrieve the templates
         jQuery.ajax({
@@ -148,25 +171,23 @@ class InvoiceFactory extends Base
         this
 
     generate: (values) ->
-        invoice = new Invoice(values, @settings.element)
+        values ?= {}
+        @invoice = new Invoice(values, @settings.element)
 
-        @settings.element.html(tmpl('invoiceTemplate', invoice))
+        @invoice.render()
+        @invoice.renderForm()
 
-        # Both of these work, but I don't like either of them.
-        # invoice.total = 0 # This won't work if we begin with a number of lines
-        # invoice.showElement('total', invoice.renderTotal()) # This looks hackish
-
-        invoice
+        @invoice
 
     registerEvents: () ->
-        # Detect value changes
-        #@settings.element.on('change', 'input', jQuery.proxy(@handleFormChange, this))
-
         # Handle the Confirm Line Button
-        #@settings.element.on('click', '#confirm-line', jQuery.proxy(handleConfirmLine, this));
+        @settings.element.on('click', '#confirm-line', jQuery.proxy(@confirmLine, this));
+
+        # Detect value changes
+        @settings.element.on('change', 'input', jQuery.proxy(@formChange, this))
 
         # Handle the Edit Line Button
-        #@settings.element.on('click', '.edit-line', jQuery.proxy(handleEditLine, this));
+        @settings.element.on('click', '.edit-line', jQuery.proxy(@editLine, this));
 
         # Handle setting the Description
         #@settings.element.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this));
@@ -175,5 +196,47 @@ class InvoiceFactory extends Base
 
         # Sync the view
         #@settings.element.on('invoice-tax', jQuery.proxy(setTaxView, this));
+
+    editLine: (evt) ->
+        evt.preventDefault()
+
+        line = jQuery(evt.target).closest('tr');
+
+        number = parseFloat(line.find('.line-number').html());
+        quantity = parseFloat(line.find('.line-quantity').html());
+        description = line.find('.line-description').html();
+        line_price = line.find('.line-linePrice').html();
+
+        line_price = parseFloat(line_price.replace(/^[^0-9\.]*/, ''));
+
+        lineObj = new InvoiceLine(number, quantity, description, line_price);
+
+        editing = number;
+
+        jQuery('#line-form').remove();
+
+        form = format('invoiceLineFormTemplate', lineObj);
+        line.replaceWith(form);
+
+        return false;
+
+
+    confirmLine: (evt) ->
+        evt.preventDefault()
+
+        @formChange()
+
+        if currentLine.description.length > 0
+            invoice.addLine(currentLine)
+            invoice.renderForm()
+        else
+            jQuery('#description').closest('td').addClass('has-error')
+            jQuery('#description').attr('placeholder', 'Please enter a description')
+
+    formChange: (evt) ->
+        currentLine.description = jQuery('#description').val()
+        currentLine.quantity = parseFloat(jQuery('#quantity').val())
+        currentLine.linePrice = parseFloat(jQuery('#linePrice').val())
+        jQuery('#amount').val(money_format(currentLine.amount))
 
 window.invoiceFactory = new InvoiceFactory()
