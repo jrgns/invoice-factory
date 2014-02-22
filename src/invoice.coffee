@@ -43,10 +43,10 @@ class InvoiceLine extends Base
         @accessor 'invoice', 'description', 'quantity', 'linePrice'
         @readable 'amount', 'number', 'currency'
 
-        @invoice = invoice
-        @quantity = quantity ? 1
-        @linePrice = linePrice ? 0
-        @description = description ? ''
+        @_invoice = invoice
+        @_quantity = quantity ? 1
+        @_linePrice = linePrice ? 0
+        @_description = description ? ''
         @_currency = currency ? invoice.currency
 
         @_number = invoice.lines.length + 1
@@ -70,33 +70,36 @@ class Invoice extends Base
         }
 
         # Default Values
-        @to = values.to ? 'Client'
-        @from = values.from ? 'HackerPlanet'
-        @contact = values.contact ? 'info@hackerpla.net'
-        @description = values.description ? 'Client Side Invoicing'
-        @date = values.date ? new Date()
-        @dueDate = values.dueDate ? new Date().setDate(new Date().getDate() + 7)
+        @_to = values.to ? 'Client'
+        @_from = values.from ? 'HackerPlanet'
+        @_contact = values.contact ? 'info@hackerpla.net'
+        @_description = values.description ? 'Client Side Invoicing'
+        @_date = values.date ? new Date()
+        @_dueDate = values.dueDate ? new Date().setDate(new Date().getDate() + 7)
 
         # Setup total, lines and Tax
-        @total = 0
-        @lines = []
+        @_total = 0
+        @_lines = []
         @addLine line for line in values.lines ? []
 
     fireEvent: (name, data) ->
         @element.trigger('invoice-' + name, data)
 
-        # Render the value
-        cap = "#{name[0].toUpperCase()}#{name[1..-1]}"
-        if "render#{cap}" of this
-            html = this["render#{cap}"] data
-        else
-            html = data
+        template = jQuery.parseHTML(jQuery('#invoiceTemplate').html())
+        template = jQuery(template).find('[data-show="invoice-' + name + '"]').text()
 
-        @showElement(name, html)
+        if (template)
+            console.log(template)
+            # Render the value
+            cap = "#{name[0].toUpperCase()}#{name[1..-1]}"
+            if "render#{cap}" of this
+                data = this["render#{cap}"] data
+            else
+                vars = {}
+                vars[name] = data
+                data = tmpl(template, vars)
 
-    showElement: (name, html) ->
-        # Consider renaming this to rather use data-model or something
-        jQuery('#invoice-' + name + '-show').html(html);
+        jQuery('[data-show="invoice-' + name + '"]').html(data)
 
     render: () ->
         @element.html(tmpl('invoiceTemplate', this))
@@ -104,32 +107,18 @@ class Invoice extends Base
     renderForm: () ->
         currentLine = new InvoiceLine(this)
         formHtml = tmpl('invoiceLineFormTemplate', currentLine)
-        @element.find('#invoice-lines-show').append(formHtml)
-
-    renderTotal: (total) ->
-        total ?= @total
-
-        money_format(total)
-
-    renderTax: (tax) ->
-        tax ?= @tax
-
-        money_format(tax)
+        @element.find('[data-show="invoice-lines"]').append(formHtml)
 
     renderLines: (lines) ->
         lines ?= @lines
 
         jQuery('#invoice-lines').html('')
 
-        lines = lines.reduce ((lines, line) ->
+        lines.reduce ((lines, line) ->
             lines += tmpl('invoiceLineTemplate', line)), ''
 
-        # TODO Add tax line if necessary
-
-        lines
-
     getTax: ->
-        @tax = @_total * @_taxation.rate
+        @_tax = @_total * @_taxation.rate
 
     getTotal: (withTax = true) ->
         @_total = @lines?.reduce ((total, line) ->
@@ -150,18 +139,18 @@ class Invoice extends Base
 
 class InvoiceFactory extends Base
     constructor: ->
-        @accessor 'template_path'
+        @accessor 'templatePath'
 
     init: (@settings) ->
         @settings ?= {}
         @settings.element = jQuery(@settings.element ? '#online-invoice')
 
-        @template_path = @settings.template_path ? './assets/templates/invoice.js.html'
+        @_templatePath = @settings.templatePath ? './assets/templates/invoice.js.html'
 
         # Retrieve the templates
         jQuery.ajax({
-            url: @template_path,
-            success: (template, xhr, status) -> jQuery('body').append(template);,
+            url: @templatePath,
+            success: (template, xhr, status) -> jQuery('body').append(template),
             dataType: 'html',
             async: false
         })
@@ -172,53 +161,53 @@ class InvoiceFactory extends Base
 
     generate: (values) ->
         values ?= {}
-        @invoice = new Invoice(values, @settings.element)
+        invoice = new Invoice(values, @settings.element)
 
-        @invoice.render()
-        @invoice.renderForm()
+        invoice.render()
+        invoice.renderForm()
 
-        @invoice
+        invoice
 
     registerEvents: () ->
         # Handle the Confirm Line Button
-        @settings.element.on('click', '#confirm-line', jQuery.proxy(@confirmLine, this));
+        @settings.element.on('click', '#confirm-line', jQuery.proxy(@confirmLine, this))
 
         # Detect value changes
         @settings.element.on('change', 'input', jQuery.proxy(@formChange, this))
 
         # Handle the Edit Line Button
-        @settings.element.on('click', '.edit-line', jQuery.proxy(@editLine, this));
+        @settings.element.on('click', '.edit-line', jQuery.proxy(@editLine, this))
 
         # Handle setting the Description
-        #@settings.element.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this));
+        #@settings.element.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this))
 
-        #@settings.element.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this));
+        #@settings.element.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this))
 
         # Sync the view
-        #@settings.element.on('invoice-tax', jQuery.proxy(setTaxView, this));
+        #@settings.element.on('invoice-tax', jQuery.proxy(setTaxView, this))
 
     editLine: (evt) ->
         evt.preventDefault()
 
-        line = jQuery(evt.target).closest('tr');
+        line = jQuery(evt.target).closest('tr')
 
-        number = parseFloat(line.find('.line-number').html());
-        quantity = parseFloat(line.find('.line-quantity').html());
-        description = line.find('.line-description').html();
-        line_price = line.find('.line-linePrice').html();
+        number = parseFloat(line.find('.line-number').html())
+        quantity = parseFloat(line.find('.line-quantity').html())
+        description = line.find('.line-description').html()
+        line_price = line.find('.line-linePrice').html()
 
-        line_price = parseFloat(line_price.replace(/^[^0-9\.]*/, ''));
+        line_price = parseFloat(line_price.replace(/^[^0-9\.]*/, ''))
 
-        lineObj = new InvoiceLine(number, quantity, description, line_price);
+        lineObj = new InvoiceLine(number, quantity, description, line_price)
 
-        editing = number;
+        editing = number
 
-        jQuery('#line-form').remove();
+        jQuery('#line-form').remove()
 
-        form = format('invoiceLineFormTemplate', lineObj);
-        line.replaceWith(form);
+        form = format('invoiceLineFormTemplate', lineObj)
+        line.replaceWith(form)
 
-        return false;
+        return false
 
 
     confirmLine: (evt) ->

@@ -11,21 +11,21 @@
     </div>
     <div class="row">
         <div class="col-lg-6">
-            <h3><span class="text-muted">To: </span><span id="invoice-to-show"><%= to %></span></h3>
-            <div id="invoice-description-show">
+            <h3><span class="text-muted">To: </span><span data-show="invoice-to"><%= to %></span></h3>
+            <div data-show="invoice-description">
                 <%= description %>
             </div>
         </div>
         <div class="col-lg-6 text-right">
-            <h3><span class="text-muted">From: </span><span id="invoice-from-show"><%= from %></span></h3>
+            <h3><span class="text-muted">From: </span><span data-show="invoice-from"><%= from %></span></h3>
             <div>
-                <label id="invoice-contact-show"><%= contact %></label>
+                <label data-show="invoice-contact"><%= contact %></label>
             </div>
             <div>
-                <label>Date:</label> <span id="invoice-date-show"><%= date_format(date) %></span>
+                <label>Date:</label> <span data-show="invoice-date"><%= date_format(date) %></span>
             </div>
             <div>
-                <label>Due Date:</label> <span id="invoice-dueDate-show"><%= date_format(dueDate) %></span>
+                <label>Due Date:</label> <span data-show="invoice-dueDate"><%= date_format(dueDate) %></span>
             </div>
         </div>
     </div>
@@ -42,7 +42,7 @@
                         <th>&nbsp;</th>
                     </tr>
                 </thead>
-                <tbody id="invoice-lines-show">
+                <tbody data-show="invoice-lines">
                 </tbody>
             </table>
             <% if (taxation.rate != null) { %>
@@ -50,15 +50,15 @@
                     <span class="text-muted">
                         <%= taxation.name %> @ <%= money_format(taxation.rate * 100) %>%
                     </span>
-                    <%= currency %>&nbsp;<span id="invoice-tax-show"><%= money_format(tax) %></span>
+                    <%= currency %>&nbsp;<span data-show="invoice-tax"><%= money_format(tax) %></span>
                 </h4>
             <% } %>
-            <h3 class="text-right">Total: <%= currency %>&nbsp;<span id="invoice-total-show"><%= money_format(total) %></span></h3>
+            <h3 class="text-right">Total: <%= currency %>&nbsp;<span data-show="invoice-total"><%= money_format(total) %></span></h3>
         </form>
     </div>
     <hr>
     <div class="text-muted text-center">
-        Invoice Generated on
+        Invoice Generated on <%= new Date() %>
     </div>
 </script>
 
