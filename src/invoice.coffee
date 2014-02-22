@@ -56,8 +56,8 @@ class InvoiceLine extends Base
 
 class Invoice extends Base
     constructor: (values, @element) ->
-        @accessor 'to', 'from', 'contact', 'description', 'date', 'dueDate', 'lines', 'total', 'tax'
-        @readable 'currency', 'taxation'
+        @accessor 'to', 'from', 'contact', 'description', 'date', 'dueDate', 'lines'
+        @readable 'currency', 'taxation', 'total', 'tax'
 
         values ?= {}
 
@@ -89,7 +89,6 @@ class Invoice extends Base
         template = jQuery(template).find('[data-show="invoice-' + name + '"]').text()
 
         if (template)
-            console.log(template)
             # Render the value
             cap = "#{name[0].toUpperCase()}#{name[1..-1]}"
             if "render#{cap}" of this
@@ -136,6 +135,9 @@ class Invoice extends Base
 
         @fireEvent 'lines', @lines
         @fireEvent 'total', @total
+        @fireEvent 'tax', @tax
+
+        this
 
 class InvoiceFactory extends Base
     constructor: ->
