@@ -42,6 +42,7 @@
   this.date_format = function date_format(date) {
     var d = new Date(date);
     var curr_date = d.getDate();
+    curr_date = curr_date < 10 ? '0' + curr_date : curr_date;
     var curr_month = d.getMonth() + 1; //Months are zero based
     curr_month = curr_month < 10 ? '0' + curr_month : curr_month;
     var curr_year = d.getFullYear();
