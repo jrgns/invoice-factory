@@ -34,7 +34,7 @@ describe 'InvoiceLine', () ->
     it 'should calculate it\s amount correctly', () ->
         expect(invoiceLine.amount).toBe quantity * linePrice
 
-    it 'should not add a line twice', () ->
+    it 'should not be added twice', () ->
         invoice.addLine(invoiceLine)
         expect(invoiceLine.number).toBe 1
         invoice.addLine(invoiceLine)

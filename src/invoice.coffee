@@ -75,12 +75,11 @@ class Invoice extends Base
         @_contact = values.contact ? 'info@hackerpla.net'
         @_description = values.description ? 'Client Side Invoicing'
         @_date = values.date ? new Date()
-        @_dueDate = values.dueDate ? new Date().setDate(new Date().getDate() + 7)
+        @_dueDate = values.dueDate ? new Date(@_date + 7)
 
-        # Setup total, lines and Tax
+        # Setup total and lines
         @_total = 0
         @_lines = []
-        @addLine line for line in values.lines ? []
 
     fireEvent: (name, data) ->
         @element.trigger('invoice-' + name, data)
@@ -128,6 +127,10 @@ class Invoice extends Base
             @_total + @getTax()
         else
             @_total
+
+    setLines: (lines) ->
+        @_lines = []
+        @addLine line for line in lines ? []
 
     addLine: (line) ->
         if line not in @_lines
