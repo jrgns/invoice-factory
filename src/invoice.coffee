@@ -136,11 +136,22 @@ class Invoice extends Base
         if line not in @_lines
             @_lines.push(line)
 
+        # Stil fire the events, as the line might have changed
         @fireEvent 'lines', @lines
         @fireEvent 'total', @total
         @fireEvent 'tax', @tax
 
         this
+
+    getLine: (number) ->
+        theLine = null
+
+        @lines.each (line) ->
+            if line.number == number
+                theLine = line
+
+        theLine
+
 
 class InvoiceFactory extends Base
     constructor: ->
@@ -195,25 +206,14 @@ class InvoiceFactory extends Base
         evt.preventDefault()
 
         line = jQuery(evt.target).closest('tr')
-
-        number = parseFloat(line.find('.line-number').html())
-        quantity = parseFloat(line.find('.line-quantity').html())
-        description = line.find('.line-description').html()
-        line_price = line.find('.line-linePrice').html()
-
-        line_price = parseFloat(line_price.replace(/^[^0-9\.]*/, ''))
-
-        lineObj = new InvoiceLine(number, quantity, description, line_price)
-
-        editing = number
+        number = line.data('number')
+        currentLine = invoice.getLine(number)
 
         jQuery('#line-form').remove()
 
-        form = format('invoiceLineFormTemplate', lineObj)
+        form = tmpl('invoiceLineFormTemplate', currentLine)
+
         line.replaceWith(form)
-
-        return false
-
 
     confirmLine: (evt) ->
         evt.preventDefault()
