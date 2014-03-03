@@ -10,6 +10,8 @@
     <div class="container">
         <div id="online-invoice"></div>
     </div>
+    <!-- Use inputs like this to make the invoice editable -->
+    <!-- <input data-set="invoice-description" type="text"> -->
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script>
 // Set Invoice config settings here
@@ -26,6 +28,12 @@ $(document).ready(function() {
         taxRate: 0.14
     }
     invoice = invoiceFactory.init().generate(values);
+
+    // Uncomment the following code and add input boxes (see above) to make the invoice editable
+    // $('[data-set]').on('change', function(evt) {
+    //     var property = $(this).data('set').replace(/^invoice-/g, '');
+    //     invoice[property] = $(this).val();
+    // });
 })
     </script>
 </body>

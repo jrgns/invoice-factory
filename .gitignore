@@ -1,2 +1,4 @@
 node_modules
 web/assets/js
+spec/*.js
+src/*.js

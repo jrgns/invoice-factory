@@ -194,14 +194,6 @@ class InvoiceFactory extends Base
         # Handle the Edit Line Button
         @settings.element.on('click', '.edit-line', jQuery.proxy(@editLine, this))
 
-        # Handle setting the Description
-        #@settings.element.on('click', '#invoice-description-show', jQuery.proxy(handleSetDescription, this))
-
-        #@settings.element.on('focusout', '#invoice-description', jQuery.proxy(handleLeaveDescription, this))
-
-        # Sync the view
-        #@settings.element.on('invoice-tax', jQuery.proxy(setTaxView, this))
-
     editLine: (evt) ->
         evt.preventDefault()
 

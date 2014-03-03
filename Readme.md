@@ -11,6 +11,23 @@
     })
     </script>
 
+## Editing
+
+Online diting of the various properties can easily be achieved in two steps.
+
+Firstly, uncomment (or add) the following JavaScript:
+
+    $('[data-set]').on('change', function(evt) {
+        var property = $(this).data('set').replace(/^invoice-/g, '');
+        invoice[property] = $(this).val();
+    });
+
+Secondly, add form elements with `data-set` attributes that start with `invoice-` and is followed by the invoice property you want to make editable. These form elements can be anywhere in the HTML.
+
+As an example, if you want to make the description editable, add this input:
+
+    <input data-set="invoice-description" type="text">
+
 ## Invoice
 
 ### Properties
