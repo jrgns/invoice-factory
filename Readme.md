@@ -11,6 +11,12 @@
     })
     </script>
 
+## Theming
+
+The invoice uses the `web\assets\templates\invoice.js.html` as it's default template. It contains three template elements to define the invoice, invoice line and line form. These can be modified in the file itself, or a new template file created and then passed to the InvoiceFactory init method:
+
+    invoice = invoiceFactory.init({ templatePath: './assets/templates/newTemplate.js.html' }).generate();
+
 ## Editing
 
 Online diting of the various properties can easily be achieved in two steps.
@@ -27,6 +33,16 @@ Secondly, add form elements with `data-set` attributes that start with `invoice-
 As an example, if you want to make the description editable, add this input:
 
     <input data-set="invoice-description" type="text">
+
+## Events
+
+Events are fired everytime the property of an Invoice object is changed. This can be used to add custom functionality to the invoice. The event is fired on the invoice element, typically `$('#online-invoice')`. Each event is prefaced with 'invoice-', followed by the property name. The new value of the property is passed down as a second parameter to the event handler.
+
+As an example:
+
+    $('#online-invoice').on('invoice-to', function(evt, newValue) {
+        alert("We're now sending the invoice to " + newValue);
+    });
 
 ## Objects
 
@@ -120,13 +136,3 @@ As an example, if you want to make the description editable, add this input:
 * getAmount()
 * getNumber()
 * getCurrency()
-
-Events
-------
-
-* invoice-line
-* invoice-description
-* invoice-from
-* invoice-to
-* invoice-date
-* invoice-due_date
