@@ -3,20 +3,27 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    uglify: {
-      options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+    coffeelint: {
+        all: ['src/*.coffee', 'spec/*.coffee']
+    },
+    coffee: {
+      compile: {
+        options: {
+          join: true
+        },
+        files: {
+          'src/invoice.js': 'src/*.coffee'
+        }
       },
-      build: {
-        src: 'src/<%= pkg.name %>.js',
-        dest: 'web/assets/js/invoice.min.js'
+      compileSpec: {
+        files: [{
+          expand: true,
+          flatten: true,
+          src: ['spec/*Spec.coffee'],
+          dest: 'spec/',
+          ext: '.js'
+        }]
       }
-    },
-    jshint: {
-        all: ['Gruntfile.js', 'src/*.js', 'test/*.js']
-    },
-    qunit: {
-        all: ['test/**/*.html']
     },
     compress: {
       main: {
@@ -28,18 +35,25 @@ module.exports = function(grunt) {
           { src: ['Readme.md'], dest: '/', filter: 'isFile' }
         ]
       }
+    },
+    jasmine: {
+      invoice: {
+        src: 'src/invoice.js',
+        options: {
+          specs: 'spec/*Spec.js'
+        }
+      }
     }
   });
 
   // Load the plugin that provides the "uglify" task.
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
+  grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-contrib-compress');
 
   // Default task(s).
-  grunt.registerTask('default', ['jshint', 'uglify']);
+  grunt.registerTask('default', ['coffeelint', 'coffee']);
 
-  grunt.registerTask('full', ['jshint', 'uglify', 'qunit', 'compress']);
+  grunt.registerTask('full', ['coffeelint', 'coffee', 'compress']);
 
 };

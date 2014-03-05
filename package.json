@@ -4,10 +4,8 @@
   "description": "A JavaScript only invoice generator",
   "devDependencies": {
     "grunt": "~0.4.2",
-    "grunt-contrib-jshint": "2.4.1",
-    "grunt-contrib-nodeunit": "~0.2.0",
-    "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-qunit": "~0.3.0",
-    "grunt-contrib-compress": "~0.6.0"
+    "grunt-coffeelint": "0.0.8",
+    "grunt-contrib-coffee": "~0.10.1",
+    "grunt-contrib-compress": "~0.7.0"
   }
 }
