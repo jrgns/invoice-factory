@@ -12,7 +12,7 @@ module.exports = function(grunt) {
           join: true
         },
         files: {
-          'src/invoice.js': 'src/*.coffee'
+          'web/assets/js/invoice.js': 'src/*.coffee'
         }
       },
       compileSpec: {

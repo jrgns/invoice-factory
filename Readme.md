@@ -19,7 +19,7 @@ The invoice uses the `web\assets\templates\invoice.js.html` as it's default temp
 
 ## Editing
 
-Online diting of the various properties can easily be achieved in two steps.
+Online editing of the various properties can easily be achieved in two steps.
 
 Firstly, uncomment (or add) the following JavaScript:
 
