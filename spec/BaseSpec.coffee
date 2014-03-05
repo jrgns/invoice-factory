@@ -22,8 +22,11 @@ describe 'Base', () ->
     spyOn(base, 'setCap')
 
   it 'should not set readable', () ->
-    base.readableProp = 'set'
-    expect(base.readableProp).not.toBe 'set'
+    try
+      base.readableProp = 'set'
+    catch error
+
+    expect(base._readableProp).not.toBe 'set'
 
   it 'should set and get accessors', () ->
     base.accessorProp = 'set'
