@@ -28,9 +28,24 @@ As an example, if you want to make the description editable, add this input:
 
     <input data-set="invoice-description" type="text">
 
-## Invoice
+## Objects
 
-### Properties
+### InvoiceFactory
+
+#### Properties
+
+* templatePath
+
+#### Methods
+
+* init(settings)
+* generate(values)
+* getTemplatePath()
+* setTemplatePath(templatePath)
+
+### Invoice
+
+#### Properties
 
 * to
 * from
@@ -40,20 +55,21 @@ As an example, if you want to make the description editable, add this input:
 * dueDate
 * lines
 
-### Readonly Properties
+#### Readonly Properties
 
 * currency
 * taxation
 * total
 * tax
 
-### Methods
+#### Methods
 
-* render
-* renderForm
-* renderLines
-* setLines
-* addLine
+* render()
+* renderForm()
+* renderLines()
+* setLines()
+* addLine()
+* getLine(number)
 
 * getTo()
 * setTo(to)
@@ -75,30 +91,35 @@ As an example, if you want to make the description editable, add this input:
 * getTotal()
 * getTax()
 
-## InvoiceLine
+### InvoiceLine
 
-### Methods
+#### Properties
 
-* init
-* generate
+* invoice
+* description
+* quantity
+* linePrice
 
-API
----
+#### Readonly Properties
 
-* init()
-* setTo(to)
-* getTo()
-* setFrom(from)
-* getFrom()
-* setDescription(description)
+* amount
+* number
+* currency
+
+#### Methods
+
+* getInvoice()
+* setInvoice(invoice)
 * getDescription()
-* setDate(date)
-* getDate()
-* setDueDate(due_date)
-* getDueDate()
-* getLines()
-* addLine(line)
-* calculateTotal()
+* setDescription(description)
+* getQuantity()
+* setQuantity(quantity)
+* getLinePrice()
+* setLinePrice(linePrice)
+
+* getAmount()
+* getNumber()
+* getCurrency()
 
 Events
 ------
