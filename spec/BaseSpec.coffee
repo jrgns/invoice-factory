@@ -4,12 +4,12 @@ class TestBase extends Base
 
   setCap: (value) ->
     @_cap = value
+    this
 
   getCap: () ->
     @_cap
 
 describe 'Base', () ->
-
   base = null
 
   beforeEach ->

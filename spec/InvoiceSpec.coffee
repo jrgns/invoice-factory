@@ -1,6 +1,6 @@
 describe 'Invoice', () ->
   invoice = null
-  element = $('body')
+  element = $('<div id="online-invoice"></div>')
 
   to = 'TestTo'
   from = 'TestFrom'

@@ -9,20 +9,19 @@ module.exports = function(grunt) {
     coffee: {
       compile: {
         options: {
-          join: true
+          join: true, bare: true
         },
         files: {
           'web/assets/js/invoice.js': 'src/*.coffee'
         }
       },
       compileSpec: {
-        files: [{
-          expand: true,
-          flatten: true,
-          src: ['spec/*Spec.coffee'],
-          dest: 'spec/',
-          ext: '.js'
-        }]
+        options: {
+          join: true, bare: true
+        },
+        files: {
+          'spec/InvoiceSpec.js': 'spec/*.coffee'
+        }
       }
     },
     compress: {
@@ -38,9 +37,12 @@ module.exports = function(grunt) {
     },
     jasmine: {
       invoice: {
-        src: 'src/invoice.js',
+        src: 'web/assets/js/invoice.js',
         options: {
-          specs: 'spec/*Spec.js'
+          specs: 'spec/InvoiceSpec.js',
+          vendor: [
+            'http://code.jquery.com/jquery-1.10.1.min.js'
+          ]
         }
       }
     }
@@ -50,10 +52,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-contrib-compress');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default task(s).
   grunt.registerTask('default', ['coffeelint', 'coffee']);
 
-  grunt.registerTask('full', ['coffeelint', 'coffee', 'compress']);
+  grunt.registerTask('test', ['coffeelint', 'coffee', 'jasmine']);
+
+  grunt.registerTask('full', ['coffeelint', 'coffee', 'jasmine', 'compress']);
 
 };

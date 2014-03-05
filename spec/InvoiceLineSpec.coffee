@@ -1,16 +1,18 @@
 invoiceCurrency = 'ZAR'
-invoice = new Invoice( { currency: invoiceCurrency }, $('body') )
+element = null
+invoice = null
 
 describe 'InvoiceLine', () ->
-
   description = 'The Description'
   quantity = 12.3
   linePrice = 3
   currency = 'BWP'
-
   invoiceLine = null
 
   beforeEach ->
+    element = $('<div id="online-invoice"></div>')
+    invoice = new Invoice( { currency: invoiceCurrency }, element )
+
     invoice.lines = []
     invoiceLine = new InvoiceLine(
       invoice, description, quantity, linePrice, currency
