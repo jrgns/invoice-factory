@@ -12,7 +12,7 @@ module.exports = function(grunt) {
           join: true, bare: true
         },
         files: {
-          'web/assets/js/invoice.js': 'src/*.coffee'
+          'src/invoice.js': 'src/*.coffee'
         }
       },
       compileSpec: {
@@ -24,6 +24,15 @@ module.exports = function(grunt) {
         }
       }
     },
+
+    uglify: {
+      build: {
+        files: {
+          'web/assets/js/invoice.js': [ 'src/templating.js', 'src/invoice.js' ]
+        }
+      }
+    },
+
     compress: {
       main: {
         options: {
@@ -51,14 +60,15 @@ module.exports = function(grunt) {
   // Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-coffeelint');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default task(s).
-  grunt.registerTask('default', ['coffeelint', 'coffee']);
+  grunt.registerTask('default', ['coffeelint', 'coffee', 'uglify']);
 
-  grunt.registerTask('test', ['coffeelint', 'coffee', 'jasmine']);
+  grunt.registerTask('test', ['coffeelint', 'coffee', 'uglify', 'jasmine']);
 
-  grunt.registerTask('full', ['coffeelint', 'coffee', 'jasmine', 'compress']);
+  grunt.registerTask('full', ['coffeelint', 'coffee', 'uglify', 'jasmine', 'compress']);
 
 };
