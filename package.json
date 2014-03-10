@@ -1,6 +1,6 @@
 {
   "name": "invoice-online",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A JavaScript only invoice generator",
   "devDependencies": {
     "grunt": "~0.4.2",
