@@ -33,6 +33,16 @@ module.exports = function(grunt) {
       }
     },
 
+    concat: {
+      options: {
+        separator: ';',
+      },
+      dist: {
+        src: [ 'src/templating.js', 'src/invoice.js' ],
+        dest: 'web/assets/js/invoice.js',
+      },
+    },
+
     compress: {
       main: {
         options: {
@@ -61,10 +71,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default task(s).
+  grunt.registerTask('debug', ['coffeelint', 'coffee', 'concat']);
+
   grunt.registerTask('default', ['coffeelint', 'coffee', 'uglify']);
 
   grunt.registerTask('test', ['coffeelint', 'coffee', 'uglify', 'jasmine']);
