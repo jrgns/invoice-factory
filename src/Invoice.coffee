@@ -27,6 +27,7 @@ class Invoice extends Base
     @_lines = []
 
   fireEvent: (name, data) ->
+    @element.trigger('invoice-change', this)
     @element.trigger('invoice-' + name, data)
 
     template = jQuery.parseHTML(jQuery('#invoiceTemplate').html())
@@ -97,3 +98,28 @@ class Invoice extends Base
         theLine = line
 
     theLine
+
+  fromJSON: (jsonString) ->
+    values = JSON.parse(jsonString)
+    for property, value of values
+      property = property.replace(/^_/, '')
+      switch property
+        when 'element' then # Ignore element
+        when 'lines' then # TODO Convert lines into objects
+        when 'currentLine' then # TODO Convert currentLine into an object
+        when 'taxation'
+          value = {
+            rate: value.taxRate ? null,
+            name: value.taxName ? 'Tax'
+          }
+          this[property] = value
+        when 'tax', 'total'
+          this[property] = parseInt(value)
+        when 'date', 'dueDate'
+          this[property] = new Date(value)
+        else
+          console.log(property + '::' + value)
+          this[property] = value
+
+    this
+
