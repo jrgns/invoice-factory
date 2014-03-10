@@ -13,3 +13,23 @@ class InvoiceLine extends Base
 
   getAmount: ->
     @_quantity * @_linePrice
+
+  fromJSON: (jsonString) ->
+    try
+      values = JSON.parse(jsonString)
+    catch error
+      console.log(error)
+      return null
+
+    for property, value of values
+      property = property.replace(/^_/, '')
+      switch property
+        when invoice then # Ignore the invoice. Should be set when constructed
+        when 'quantity', 'linePrice', 'amount'
+          this[property] = parseFloat(value)
+        when 'number'
+          this[property] = parseInt(value)
+        else
+          this[property] = value
+
+    this

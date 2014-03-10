@@ -1,4 +1,5 @@
 var invoice;
+var seen;
 
 $(document).ready(function() {
     invoice = invoiceFactory.init().generate();
@@ -14,7 +15,10 @@ $(document).ready(function() {
     });
 
     $('#online-invoice').on('invoice-change', function(evt, invoice) {
+        seen = [];
         localStorage['invoice'] = JSON.stringify(invoice, checkCyclic);
+
+        console.log(localStorage['invoice']);
     });
 
     $('#theme-select').on('change', function(evt) {
@@ -27,7 +31,6 @@ $(document).ready(function() {
     });
 });
 
-seen = [];
 function checkCyclic(key, val) {
    if (typeof val == "object") {
         if (seen.indexOf(val) >= 0)

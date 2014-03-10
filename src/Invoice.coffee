@@ -100,13 +100,24 @@ class Invoice extends Base
     theLine
 
   fromJSON: (jsonString) ->
-    values = JSON.parse(jsonString)
+    try
+      values = JSON.parse(jsonString)
+    catch error
+      console.log(error)
+      return null
+
     for property, value of values
       property = property.replace(/^_/, '')
       switch property
         when 'element' then # Ignore element
-        when 'lines' then # TODO Convert lines into objects
-        when 'currentLine' then # TODO Convert currentLine into an object
+        when 'lines'
+          for lineValues in value
+            line = new InvoiceLine(this)
+            line = line.fromJSON(JSON.stringify(lineValues))
+            @addLine line
+        when 'currentLine'
+          line = new InvoiceLine(this)
+          this[property] = line.fromJSON(JSON.stringify(value))
         when 'taxation'
           value = {
             rate: value.taxRate ? null,
@@ -118,8 +129,9 @@ class Invoice extends Base
         when 'date', 'dueDate'
           this[property] = new Date(value)
         else
-          console.log(property + '::' + value)
           this[property] = value
+
+    @renderForm()
 
     this
 
