@@ -33,6 +33,10 @@
     return data ? fn( data ) : fn;
   };
 
+  this.tmplClear = function() {
+    cache = {};
+  };
+
   this.money_format = function money_format(value) {
     var parts = parseFloat(value).toFixed(2).toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");

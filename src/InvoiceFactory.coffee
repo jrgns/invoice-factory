@@ -6,16 +6,9 @@ class InvoiceFactory extends Base
     @settings ?= {}
     @settings.element = jQuery(@settings.element ? '#online-invoice')
 
-    @_templatePath =
+    @setTemplatePath(
       @settings.templatePath ? './assets/templates/invoice.js.html'
-
-    # Retrieve the templates
-    jQuery.ajax({
-      url: @templatePath,
-      success: (template, xhr, status) -> jQuery('body').append(template),
-      dataType: 'html',
-      async: false
-    })
+    )
 
     @registerEvents()
 
@@ -41,6 +34,20 @@ class InvoiceFactory extends Base
 
     # Handle the Edit Line Button
     @settings.element.on('click', '.edit-line', jQuery.proxy(@editLine, this))
+
+  setTemplatePath: (templatePath) ->
+    @_templatePath = templatePath
+    jQuery('#invoiceTemplate').remove()
+    jQuery('#invoiceLineTemplate').remove()
+    jQuery('#invoiceLineFormTemplate').remove()
+
+    # Retrieve the templates
+    jQuery.ajax({
+      url: templatePath,
+      success: (template, xhr, status) -> jQuery('body').append(template),
+      dataType: 'html',
+      async: false
+    })
 
   editLine: (evt) ->
     evt.preventDefault()
