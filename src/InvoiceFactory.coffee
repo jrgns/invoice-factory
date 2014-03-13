@@ -10,7 +10,7 @@ class InvoiceFactory extends Base
       @settings.templatePath ? './assets/templates/invoice.js.html'
     )
 
-    @registerEvents()
+    registerEvents(@settings.element)
 
     this
 
@@ -22,18 +22,6 @@ class InvoiceFactory extends Base
     invoice.renderForm()
 
     invoice
-
-  registerEvents: () ->
-    # Handle the Confirm Line Button
-    @settings.element.on(
-      'click', '#confirm-line', jQuery.proxy(@confirmLine, this)
-    )
-
-    # Detect value changes
-    @settings.element.on('change', 'input', jQuery.proxy(@formChange, this))
-
-    # Handle the Edit Line Button
-    @settings.element.on('click', '.edit-line', jQuery.proxy(@editLine, this))
 
   setTemplatePath: (templatePath) ->
     @_templatePath = templatePath
@@ -49,7 +37,19 @@ class InvoiceFactory extends Base
       async: false
     })
 
-  editLine: (evt) ->
+  registerEvents= (element) ->
+    # Handle the Confirm Line Button
+    element.on(
+      'click', '#confirm-line', confirmLine
+    )
+
+    # Detect value changes
+    element.on('change', 'input', formChange)
+
+    # Handle the Edit Line Button
+    element.on('click', '.edit-line', editLine)
+
+  editLine= (evt) ->
     evt.preventDefault()
 
     line = jQuery(evt.target).closest('tr')
@@ -62,10 +62,10 @@ class InvoiceFactory extends Base
 
     line.replaceWith(form)
 
-  confirmLine: (evt) ->
+  confirmLine= (evt) ->
     evt.preventDefault()
 
-    @formChange()
+    formChange()
 
     if invoice.currentLine.description.length > 0
       invoice.addLine(invoice.currentLine)
@@ -74,7 +74,7 @@ class InvoiceFactory extends Base
       jQuery('#description').closest('td').addClass('has-error')
       jQuery('#description').attr('placeholder', 'Please enter a description')
 
-  formChange: (evt) ->
+  formChange= (evt) ->
     invoice.currentLine.description = jQuery('#description').val()
     invoice.currentLine.quantity = parseFloat(jQuery('#quantity').val())
     invoice.currentLine.linePrice = parseFloat(jQuery('#linePrice').val())
