@@ -1,9 +1,9 @@
-invoiceCurrency = 'ZAR'
 element = null
 invoice = null
 
 describe 'InvoiceLine', () ->
   description = 'The Description'
+  number = 1
   quantity = 12.3
   linePrice = 3
   currency = 'BWP'
@@ -11,29 +11,28 @@ describe 'InvoiceLine', () ->
 
   beforeEach ->
     element = $('<div id="online-invoice"></div>')
-    invoice = new Invoice( { currency: invoiceCurrency }, element )
+    invoice = new Invoice( { }, element )
 
-    invoice.lines = []
     invoiceLine = new InvoiceLine(
-      invoice, description, quantity, linePrice, currency
+      number, description, quantity, linePrice, currency, invoice
     )
 
   it 'should be constructed correctly', () ->
-    expect(invoiceLine.invoice).toBe invoice
+    expect(invoiceLine.number).toBe number
     expect(invoiceLine.description).toBe description
     expect(invoiceLine.quantity).toBe quantity
     expect(invoiceLine.linePrice).toBe linePrice
     expect(invoiceLine.currency).toBe currency
-
-  it 'should get it\s currency from the invoice if not set', () ->
-    invoiceLine = new InvoiceLine(invoice, description, quantity, linePrice)
-    expect(invoiceLine.currency).toBe invoiceCurrency
+    expect(invoiceLine.invoice).toBe invoice
 
   it 'should have sensible defaults', () ->
-    invoiceLine = new InvoiceLine(invoice)
+    invoiceLine = new InvoiceLine()
+    expect(invoiceLine.number).toBe 1
     expect(invoiceLine.description).toBe ''
     expect(invoiceLine.quantity).toBe 1
     expect(invoiceLine.linePrice).toBe 0
+    expect(invoiceLine.currency).toBe '$'
+    expect(invoiceLine.invoice).toBe null
 
   it 'should calculate it\s amount correctly', () ->
     expect(invoiceLine.amount).toBe quantity * linePrice
@@ -48,7 +47,9 @@ describe 'InvoiceLine', () ->
     invoice.addLine(invoiceLine)
     expect(invoiceLine.number).toBe 1
 
-    anotherLine = new InvoiceLine(invoice, description, quantity, linePrice)
+    anotherLine = new InvoiceLine(
+      invoice, description, quantity, linePrice, invoice
+    )
     invoice.addLine(anotherLine)
     expect(anotherLine.number).toBe 2
 

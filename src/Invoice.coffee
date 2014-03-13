@@ -21,10 +21,8 @@ class Invoice extends Base
     @_description = values.description ? 'Client Side Invoicing'
     @_date = values.date ? new Date()
     @_dueDate = values.dueDate ? new Date(@_date + 7)
+    @setLines(values.lines ? [])
 
-    # Setup total and lines
-    @_total = 0
-    @_lines = []
 
   fireEvent: (name, data) ->
     @element.trigger('invoice-change', this)
@@ -44,23 +42,27 @@ class Invoice extends Base
         vars[name] = data
         data = tmpl(template, vars)
 
-    jQuery('[data-show="invoice-' + name + '"]').html(data)
+    @element.find('[data-show="invoice-' + name + '"]').html(data)
 
   render: () ->
     @element.html(tmpl('invoiceTemplate', this))
+    @element.find('[data-show="invoice-lines"]').html(@renderLines(@_lines))
+
+    this
 
   renderForm: () ->
-    @currentLine = new InvoiceLine(this)
-    formHtml = tmpl('invoiceLineFormTemplate', @currentLine)
-    @element.find('[data-show="invoice-lines"]').append(formHtml)
+    @currentLine = new InvoiceLine()
+    tmpl('invoiceLineFormTemplate', @currentLine)
 
   renderLines: (lines) ->
     lines ?= @lines
 
-    jQuery('#invoice-lines').html('')
+    @element.find('#invoice-lines').html('')
 
-    lines.reduce ((lines, line) ->
+    lines = lines.reduce ((lines, line) ->
       lines += tmpl('invoiceLineTemplate', line)), ''
+
+    lines + @renderForm()
 
   getTax: ->
     @_tax = @_total * @_taxation.rate
@@ -76,17 +78,26 @@ class Invoice extends Base
       @_total
 
   setLines: (lines) ->
+    @_total = 0
     @_lines = []
-    @addLine line for line in lines ? []
+    @addLine line, true for line in lines ? []
 
-  addLine: (line) ->
-    if line not in @_lines
-      @_lines.push(line)
-
-    # Stil fire the events, as the line might have changed
     @fireEvent 'lines', @lines
     @fireEvent 'total', @total
     @fireEvent 'tax', @tax
+
+    this
+
+  addLine: (line, batch) ->
+    if line not in @_lines
+      line.invoice = this
+      @_lines.push(line)
+
+    # Stil fire the events, as the line might have changed
+    if not batch
+      @fireEvent 'lines', @lines
+      @fireEvent 'total', @total
+      @fireEvent 'tax', @tax
 
     this
 
@@ -98,40 +109,3 @@ class Invoice extends Base
         theLine = line
 
     theLine
-
-  fromJSON: (jsonString) ->
-    try
-      values = JSON.parse(jsonString)
-    catch error
-      console.log(error)
-      return null
-
-    for property, value of values
-      property = property.replace(/^_/, '')
-      switch property
-        when 'element' then # Ignore element
-        when 'lines'
-          for lineValues in value
-            line = new InvoiceLine(this)
-            line = line.fromJSON(JSON.stringify(lineValues))
-            @addLine line
-        when 'currentLine'
-          line = new InvoiceLine(this)
-          this[property] = line.fromJSON(JSON.stringify(value))
-        when 'taxation'
-          value = {
-            rate: value.taxRate ? null,
-            name: value.taxName ? 'Tax'
-          }
-          this[property] = value
-        when 'tax', 'total'
-          this[property] = parseInt(value)
-        when 'date', 'dueDate'
-          this[property] = new Date(value)
-        else
-          this[property] = value
-
-    @renderForm()
-
-    this
-

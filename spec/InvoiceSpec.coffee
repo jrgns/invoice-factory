@@ -8,8 +8,12 @@ describe 'Invoice', () ->
   description = 'Test Description'
   date = new Date('2014-02-20')
   dueDate = new Date('2014-02-28')
+  invoiceLine = new InvoiceLine()
 
   beforeEach ->
+    invoice = new Invoice({ taxRate: 0.1 }, element)
+
+  it 'should be constructed correctly', () ->
     values = {
       to: to,
       from: from,
@@ -17,22 +21,21 @@ describe 'Invoice', () ->
       description: description,
       date: date,
       dueDate: dueDate,
-      taxRate: 0.1
+      taxRate: 0.1,
+      lines: new Array(invoiceLine)
     }
 
     invoice = new Invoice(values, element)
 
-  it 'should be constructed correctly', () ->
     expect(invoice.to).toBe to
     expect(invoice.from).toBe from
     expect(invoice.contact).toBe contact
     expect(invoice.description).toBe description
     expect(invoice.date.toDateString()).toBe date.toDateString()
     expect(invoice.dueDate.toDateString()).toBe dueDate.toDateString()
+    expect(invoice.lines).toEqual [invoiceLine]
 
   it 'should have sensible defaults', () ->
-    invoice = new Invoice({}, element)
-
     expect(invoice.to).toBe 'Client'
     expect(invoice.from).toBe 'HackerPlanet'
     expect(invoice.contact).toBe 'info@hackerpla.net'
@@ -40,6 +43,7 @@ describe 'Invoice', () ->
     expect(invoice.date.toDateString()).toBe new Date().toDateString()
     dueDate = new Date(invoice.date + 7)
     expect(invoice.dueDate.toDateString()).toBe dueDate.toDateString()
+    expect(invoice.lines).toEqual []
 
   it 'should not add a line twice', () ->
     invoiceLine = new InvoiceLine(invoice)
@@ -62,6 +66,7 @@ describe 'Invoice', () ->
     invoice.addLine(invoiceLine)
 
     expect(invoice.getTotal(false).toFixed(2)).toBe '33.30'
+    # Taxable amount
     expect(invoice.getTotal(true).toFixed(2)).toBe '36.63'
     expect(invoice.total.toFixed(2)).toBe '36.63'
 
