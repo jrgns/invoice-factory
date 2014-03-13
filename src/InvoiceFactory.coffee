@@ -1,6 +1,8 @@
+seen= []
+
 class InvoiceFactory extends Base
   constructor: ->
-    @accessor 'templatePath'
+    @accessor 'templatePath', 'storage'
 
   init: (@settings) ->
     @settings ?= {}
@@ -9,6 +11,8 @@ class InvoiceFactory extends Base
     @setTemplatePath(
       @settings.templatePath ? './assets/templates/invoice.js.html'
     )
+
+    @storage = @settings.storage ? localStorage
 
     registerEvents(@settings.element)
 
@@ -19,9 +23,57 @@ class InvoiceFactory extends Base
     invoice = new Invoice(values, @settings.element)
 
     invoice.render()
-    invoice.renderForm()
 
     invoice
+
+  load: (identifier) ->
+    values = @storage['invoice-' + identifier]
+
+    if typeof values == 'string' and values != 'undefined'
+      lines = []
+      values = JSON.parse(values)
+
+      invoice = {}
+      for property, value of values
+        property = property.replace(/^_/, '')
+
+        switch property
+          when 'element' then # Ignore element
+          when 'lines'
+            invoice[property] = []
+            for line,number in value
+              line = new InvoiceLine(
+                number + 1,
+                line['_description'],
+                line['_quantity'],
+                line['_linePrice'],
+                line['_currency']
+              )
+              invoice[property][number] = line
+          else
+            invoice[property] = value
+
+    else
+      invoice = values
+
+    if invoice
+      @generate(invoice)
+    else
+      null
+
+  save: (identifier, invoice) ->
+    seen = []
+    # TODO Some storage engines might not need the invoice to be stringified?
+    @storage['invoice-' + identifier] = JSON.stringify(invoice, checkCyclic)
+
+    this
+
+  checkCyclic= (key, val) ->
+    if typeof val == 'object'
+      if val in seen
+        return
+      seen.push val
+    val
 
   setTemplatePath: (templatePath) ->
     @_templatePath = templatePath
@@ -69,7 +121,6 @@ class InvoiceFactory extends Base
 
     if invoice.currentLine.description.length > 0
       invoice.addLine(invoice.currentLine)
-      invoice.renderForm()
     else
       jQuery('#description').closest('td').addClass('has-error')
       jQuery('#description').attr('placeholder', 'Please enter a description')

@@ -1,3 +1,5 @@
+# InvoiceFactory
+
 ## Basic Usage
 
     <script src="../src/templating.js"></script>
@@ -56,6 +58,8 @@ As an example:
 
 * init(settings)
 * generate(values)
+* load(identifier)
+* save(identifier, invoice)
 * getTemplatePath()
 * setTemplatePath(templatePath)
 
