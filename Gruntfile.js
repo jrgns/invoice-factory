@@ -28,7 +28,7 @@ module.exports = function(grunt) {
     uglify: {
       build: {
         files: {
-          'web/assets/js/invoice.js': [ 'src/templating.js', 'src/invoice.js' ]
+          'web/assets/js/invoice-factory.js': [ 'src/templating.js', 'src/invoice.js' ]
         }
       }
     },
@@ -39,7 +39,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [ 'src/templating.js', 'src/invoice.js' ],
-        dest: 'web/assets/js/invoice.js',
+        dest: 'web/assets/js/invoice-factory.js',
       },
     },
 
@@ -56,7 +56,7 @@ module.exports = function(grunt) {
     },
     jasmine: {
       invoice: {
-        src: 'web/assets/js/invoice.js',
+        src: 'web/assets/js/invoice-factory.js',
         options: {
           specs: 'spec/InvoiceSpec.js',
           vendor: [
@@ -76,12 +76,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default task(s).
-  grunt.registerTask('debug', ['coffeelint', 'coffee', 'concat']);
+  grunt.registerTask('debug', ['coffeelint', 'coffee', 'concat', 'jasmine']);
 
   grunt.registerTask('default', ['coffeelint', 'coffee', 'uglify']);
 
-  grunt.registerTask('test', ['coffeelint', 'coffee', 'uglify', 'jasmine']);
+  grunt.registerTask('test', ['default', 'jasmine']);
 
-  grunt.registerTask('full', ['coffeelint', 'coffee', 'uglify', 'jasmine', 'compress']);
+  grunt.registerTask('build', ['test', 'compress']);
 
 };

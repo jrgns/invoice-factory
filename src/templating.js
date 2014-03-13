@@ -26,8 +26,9 @@
           .replace(/\t=(.*?)%>/g, "',$1,'")
           .split("\t").join("');")
           .split("%>").join("p.push('")
-          .split("\r").join("\\'")
-      + "');}return p.join('');");
+          .split("\r").join("\\'") +
+
+          "');}return p.join('');");
 
     // Provide some basic currying to the user
     return data ? fn( data ) : fn;
@@ -41,7 +42,7 @@
     var parts = parseFloat(value).toFixed(2).toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return parts.join(".");
-  }
+  };
 
   this.date_format = function date_format(date) {
     var d = new Date(date);
@@ -51,5 +52,5 @@
     curr_month = curr_month < 10 ? '0' + curr_month : curr_month;
     var curr_year = d.getFullYear();
     return curr_year + "-" + curr_month + "-" + curr_date;
-  }
+  };
 })();

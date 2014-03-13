@@ -1,7 +1,7 @@
 {
-  "name": "invoice-online",
-  "version": "0.2.2",
-  "description": "A JavaScript only invoice generator",
+  "name": "invoice-factory",
+  "version": "0.2.3",
+  "description": "A JavaScript only Invoice Generator",
   "devDependencies": {
     "grunt": "~0.4.2",
     "grunt-coffeelint": "0.0.8",

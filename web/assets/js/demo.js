@@ -1,12 +1,13 @@
 var invoice;
 var seen;
+var factory;
 
 $(document).ready(function() {
-    invoice = invoiceFactory.init().generate();
+    factory = invoiceFactory.init();
 
-    invoiceValues = localStorage['invoice'];
-    if (invoiceValues !== null) {
-        invoice.fromJSON(invoiceValues);
+    invoice = factory.load('demo');
+    if (invoice === null) {
+        invoice = factory.generate();
     }
 
     $('[data-set]').on('change', function(evt) {
@@ -15,27 +16,15 @@ $(document).ready(function() {
     });
 
     $('#online-invoice').on('invoice-change', function(evt, invoice) {
-        seen = [];
-        localStorage['invoice'] = JSON.stringify(invoice, checkCyclic);
-
-        console.log(localStorage['invoice']);
+        factory.save('demo', invoice);
     });
 
     $('#theme-select').on('change', function(evt) {
         templatePath = './assets/templates/' + $(this).val() + '.js.html';
 
         tmplClear();
-        invoice = null;
 
-        invoice = invoiceFactory.init( { templatePath: templatePath } ).generate();
+        invoiceFactory.setTemplatePath(templatePath);
+        invoice.render();
     });
 });
-
-function checkCyclic(key, val) {
-   if (typeof val == "object") {
-        if (seen.indexOf(val) >= 0)
-            return;
-        seen.push(val);
-    }
-    return val;
-}
