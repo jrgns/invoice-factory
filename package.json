@@ -1,6 +1,6 @@
 {
   "name": "invoice-factory",
-  "version": "0.2.3",
+  "version": "1.0.0",
   "description": "A JavaScript only Invoice Generator",
   "devDependencies": {
     "grunt": "~0.4.2",
