@@ -1,25 +1,26 @@
 <html>
 <head>
-    <title>Online Invoice</title>
+    <title>Invoice Factory</title>
     <meta name="author" content="Hacker Planet">
-    <meta name="description" content="Online Invoice Generator">
+    <meta name="description" content="JavaScript Invoice Generator">
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
 </head>
 <body>
     <div class="container">
-        <div id="online-invoice"></div>
+        <div id="invoice-factory"></div>
     </div>
     <!-- Use inputs like this to make the invoice editable -->
     <!-- <input data-set="invoice-description" type="text"> -->
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script src="./assets/js/invoice-factory.js"></script>
     <script>
+invoice = null
 $(document).ready(function() {
     values = {
         taxRate: 0.14
     }
-    invoice = invoiceFactory.init().generate(values);
+    invoice = InvoiceFactory.init().generate(values);
 
     // Uncomment the following code and add input boxes (see above) to make the invoice editable
     // $('[data-set]').on('change', function(evt) {

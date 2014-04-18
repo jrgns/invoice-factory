@@ -6,7 +6,7 @@ class InvoiceFactory extends Base
 
   init: (@settings) ->
     @settings ?= {}
-    @settings.element = jQuery(@settings.element ? '#online-invoice')
+    @settings.element = jQuery(@settings.element ? '#invoice-factory')
 
     @setTemplatePath(
       @settings.templatePath ? './assets/templates/invoice.js.html'
