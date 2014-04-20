@@ -51,7 +51,7 @@ class Invoice extends Base
     this
 
   renderForm: () ->
-    @currentLine = new InvoiceLine()
+    @currentLine = new InvoiceLine(null, null, null, null, null, this)
     tmpl('invoiceLineFormTemplate', @currentLine)
 
   renderLines: (lines) ->

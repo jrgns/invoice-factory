@@ -38,11 +38,11 @@ As an example, if you want to make the description editable, add this input:
 
 ## Events
 
-Events are fired everytime the property of an Invoice object is changed. This can be used to add custom functionality to the invoice. The event is fired on the invoice element, typically `$('#online-invoice')`. Each event is prefaced with 'invoice-', followed by the property name. The new value of the property is passed down as a second parameter to the event handler.
+Events are fired everytime the property of an Invoice object is changed. This can be used to add custom functionality to the invoice. The event is fired on the invoice element, typically `$('#invoice-factory')`. Each event is prefaced with 'invoice-', followed by the property name. The new value of the property is passed down as a second parameter to the event handler.
 
 As an example:
 
-    $('#online-invoice').on('invoice-to', function(evt, newValue) {
+    $('#invoice-factory').on('invoice-to', function(evt, newValue) {
         alert("We're now sending the invoice to " + newValue);
     });
 

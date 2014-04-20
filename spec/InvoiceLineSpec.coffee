@@ -10,7 +10,7 @@ describe 'InvoiceLine', () ->
   invoiceLine = null
 
   beforeEach ->
-    element = $('<div id="online-invoice"></div>')
+    element = $('<div id="invoice-factory"></div>')
     invoice = new Invoice( { }, element )
 
     invoiceLine = new InvoiceLine(
@@ -48,7 +48,7 @@ describe 'InvoiceLine', () ->
     expect(invoiceLine.number).toBe 1
 
     anotherLine = new InvoiceLine(
-      invoice, description, quantity, linePrice, invoice
+      invoice, description, quantity, linePrice, currency, invoice
     )
     invoice.addLine(anotherLine)
     expect(anotherLine.number).toBe 2
@@ -60,3 +60,10 @@ describe 'InvoiceLine', () ->
   it 'should not allow it\'s number to be set', () ->
     invoice.number = 3
     expect(invoiceLine.number).toBe 1
+
+  it 'should default to the invoice\'s currency', () ->
+    invoice = new Invoice( { currency: 'ZAR' }, element )
+    anotherLine = new InvoiceLine(
+      null, null, null, null, null, invoice
+    )
+    expect(anotherLine.currency).toBe 'ZAR'

@@ -15,7 +15,7 @@ $(document).ready(function() {
         invoice[property] = $(this).val();
     });
 
-    $('#online-invoice').on('invoice-change', function(evt, invoice) {
+    $('#invoice-factory').on('invoice-change', function(evt, invoice) {
         factory.save('demo', invoice);
     });
 
